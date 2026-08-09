@@ -1,0 +1,366 @@
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  CalendarDays,
+  Check,
+  ChevronDown,
+  Globe2,
+  Heart,
+  MapPin,
+  Minus,
+  Plus,
+  Sparkles,
+  X,
+} from "lucide-react";
+import { languageOptions, translations } from "./i18n.js";
+
+function getInitialLanguage() {
+  const requested = new URLSearchParams(window.location.search).get("lang");
+  return translations[requested] ? requested : "de";
+}
+
+function Ornament({ compact = false }) {
+  return (
+    <div className={`ornament ${compact ? "ornament--compact" : ""}`} aria-hidden="true">
+      <span />
+      <Sparkles size={compact ? 13 : 16} strokeWidth={1.2} />
+      <span />
+    </div>
+  );
+}
+
+function SectionHeading({ eyebrow, children, intro }) {
+  return (
+    <header className="section-heading">
+      <p className="eyebrow">{eyebrow}</p>
+      <h2>{children}</h2>
+      {intro && <p className="section-intro">{intro}</p>}
+    </header>
+  );
+}
+
+function MultilineTitle({ lines }) {
+  return <>{lines.map((line, index) => <span key={line}>{line}{index < lines.length - 1 && <br />}</span>)}</>;
+}
+
+function FaqItem({ item, open, onToggle }) {
+  return (
+    <div className={`faq-item ${open ? "is-open" : ""}`}>
+      <button type="button" onClick={onToggle} aria-expanded={open}>
+        <span>{item.q}</span>
+        <ChevronDown size={18} strokeWidth={1.5} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            className="faq-answer"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+          >
+            <p>{item.a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function ChoiceCard({ selected, onClick, icon, title, text }) {
+  return (
+    <button type="button" className={`choice-card ${selected ? "is-selected" : ""}`} onClick={onClick}>
+      <span className="choice-icon">{icon}</span>
+      <span>
+        <strong>{title}</strong>
+        <small>{text}</small>
+      </span>
+      <span className="choice-check">{selected && <Check size={15} strokeWidth={2.5} />}</span>
+    </button>
+  );
+}
+
+function Counter({ label, hint, value, onChange, decreaseLabel, increaseLabel }) {
+  return (
+    <div className="counter-row">
+      <div>
+        <strong>{label}</strong>
+        <small>{hint}</small>
+      </div>
+      <div className="counter-controls">
+        <button type="button" onClick={() => onChange(Math.max(0, value - 1))} disabled={value === 0} aria-label={decreaseLabel}>
+          <Minus size={16} />
+        </button>
+        <span>{value}</span>
+        <button type="button" onClick={() => onChange(value + 1)} aria-label={increaseLabel}>
+          <Plus size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function LanguageSelect({ language, onChange, copy }) {
+  return (
+    <label className="language-select" aria-label={copy.nav.language}>
+      <Globe2 size={14} strokeWidth={1.7} />
+      <select value={language} onChange={(event) => onChange(event.target.value)} aria-label={copy.nav.language}>
+        {languageOptions.map((option) => <option key={option.code} value={option.code}>{option.short}</option>)}
+      </select>
+      <ChevronDown size={13} strokeWidth={1.7} aria-hidden="true" />
+    </label>
+  );
+}
+
+function RsvpSheet({ open, onClose, copy }) {
+  const text = copy.rsvp;
+  const [step, setStep] = useState(0);
+  const [attendance, setAttendance] = useState("");
+  const [partner, setPartner] = useState(0);
+  const [children, setChildren] = useState(0);
+  const [diet, setDiet] = useState("");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  const maxStep = attendance === "no" ? 2 : 3;
+  const nextDisabled = step === 0 && !attendance;
+
+  function next() {
+    if (step === 0 && attendance === "no") setStep(2);
+    else setStep((current) => Math.min(current + 1, maxStep));
+  }
+
+  function back() {
+    if (step === 2 && attendance === "no") setStep(0);
+    else setStep((current) => Math.max(0, current - 1));
+  }
+
+  function resetAndClose() {
+    onClose();
+    window.setTimeout(() => setStep(0), 350);
+  }
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div className="sheet-layer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <button className="sheet-backdrop" onClick={resetAndClose} aria-label={text.backdropClose} />
+          <motion.section
+            className="rsvp-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label={text.dialogLabel}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 270 }}
+          >
+            <div className="sheet-handle" />
+            <div className="sheet-topline">
+              {step < maxStep ? <span>{text.step(step + 1, maxStep)}</span> : <span>{text.saved}</span>}
+              <button type="button" onClick={resetAndClose} aria-label={text.close}><X size={20} /></button>
+            </div>
+            <div className="progress-track"><motion.span animate={{ width: `${((step + 1) / (maxStep + 1)) * 100}%` }} /></div>
+
+            <div className="sheet-content">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div key={step} initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.2 }}>
+                  {step === 0 && (
+                    <>
+                      <p className="eyebrow">{text.answerEyebrow}</p>
+                      <h3>{text.attendingTitle}</h3>
+                      <p className="sheet-copy">{text.attendingCopy}</p>
+                      <div className="choice-list">
+                        <ChoiceCard selected={attendance === "yes"} onClick={() => setAttendance("yes")} icon={<Heart size={22} />} title={text.yesTitle} text={text.yesText} />
+                        <ChoiceCard selected={attendance === "no"} onClick={() => setAttendance("no")} icon={<X size={22} />} title={text.noTitle} text={text.noText} />
+                      </div>
+                    </>
+                  )}
+
+                  {step === 1 && (
+                    <>
+                      <p className="eyebrow">{text.companionsEyebrow}</p>
+                      <h3>{text.companionsTitle}</h3>
+                      <p className="sheet-copy">{text.companionsCopy}</p>
+                      <div className="counter-list">
+                        <Counter label={text.partner} hint={text.partnerHint} value={partner} onChange={(value) => setPartner(Math.min(value, 1))} decreaseLabel={text.decrease(text.partner)} increaseLabel={text.increase(text.partner)} />
+                        <Counter label={text.children} hint={text.childrenHint} value={children} onChange={(value) => setChildren(Math.min(value, 4))} decreaseLabel={text.decrease(text.children)} increaseLabel={text.increase(text.children)} />
+                      </div>
+                    </>
+                  )}
+
+                  {step === 2 && (
+                    <>
+                      <p className="eyebrow">{text.almost}</p>
+                      <h3>{attendance === "no" ? text.finalNoTitle : text.finalYesTitle}</h3>
+                      <p className="sheet-copy">{attendance === "no" ? text.finalNoCopy : text.finalYesCopy}</p>
+                      {attendance !== "no" && (
+                        <label className="field-label">
+                          {text.diet}
+                          <input value={diet} onChange={(event) => setDiet(event.target.value)} placeholder={text.dietPlaceholder} />
+                        </label>
+                      )}
+                      <label className="field-label">
+                        {text.message} <span>{text.optional}</span>
+                        <textarea value={message} onChange={(event) => setMessage(event.target.value)} placeholder={text.messagePlaceholder} rows={3} />
+                      </label>
+                    </>
+                  )}
+
+                  {step === 3 && (
+                    <div className="success-state">
+                      <motion.span initial={{ scale: 0.5 }} animate={{ scale: 1 }} className="success-seal"><Check size={28} /></motion.span>
+                      <p className="eyebrow">{text.thanks}</p>
+                      <h3>{attendance === "yes" ? text.successYes : text.successNo}</h3>
+                      <p>{attendance === "yes" ? text.successAttending({ partner, children }) : text.successDeclined}</p>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            <div className="sheet-actions">
+              {step > 0 && step < 3 && <button type="button" className="button button--ghost" onClick={back}><ArrowLeft size={17} /> {text.back}</button>}
+              {step < 2 && <button type="button" className="button button--primary" disabled={nextDisabled} onClick={next}>{text.next} <ArrowRight size={17} /></button>}
+              {step === 2 && <button type="button" className="button button--primary" onClick={() => setStep(3)}>{text.send} <ArrowRight size={17} /></button>}
+              {step === 3 && <button type="button" className="button button--primary" onClick={resetAndClose}>{text.return}</button>}
+            </div>
+          </motion.section>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+export function App() {
+  const [language, setLanguage] = useState(getInitialLanguage);
+  const [rsvpOpen, setRsvpOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
+  const copy = translations[language];
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = language === "sr" ? "sr-Latn" : language;
+    document.title = copy.metaTitle;
+    const url = new URL(window.location.href);
+    url.searchParams.set("lang", language);
+    window.history.replaceState({}, "", url);
+  }, [language, copy.metaTitle]);
+
+  return (
+    <main lang={language === "sr" ? "sr-Latn" : language}>
+      <nav className={`topbar ${scrolled ? "is-scrolled" : ""}`}>
+        <a href="#top" className="monogram" aria-label={copy.nav.home}>A <span>&</span> D</a>
+        <div className="topbar-actions">
+          <LanguageSelect language={language} onChange={setLanguage} copy={copy} />
+          <button type="button" className="nav-rsvp" onClick={() => setRsvpOpen(true)}>{copy.nav.rsvp}</button>
+        </div>
+      </nav>
+
+      <section className="hero" id="top">
+        <picture className="hero-picture">
+          <source media="(min-width: 700px)" srcSet="/assets/wedding-hero-desktop.webp" />
+          <img src="/assets/wedding-hero-mobile.webp" alt={copy.hero.imageAlt} />
+        </picture>
+        <div className="hero-vignette" />
+        <div className="hero-bottom">
+          <p>{copy.hero.personal}</p>
+          <button type="button" className="button button--light" onClick={() => setRsvpOpen(true)}>{copy.hero.respond} <ArrowRight size={17} /></button>
+          <a href="#welcome" className="scroll-cue">{copy.hero.discover} <ArrowDown size={16} /></a>
+        </div>
+      </section>
+
+      <section className="welcome paper-section" id="welcome">
+        <Ornament />
+        <p className="eyebrow">{copy.welcome.eyebrow}</p>
+        <h2>{copy.wedding.couple}</h2>
+        <p className="welcome-copy">{copy.welcome.copy}</p>
+        <div className="signature">A <span>&</span> D</div>
+      </section>
+
+      <section className="details-section paper-section">
+        <SectionHeading eyebrow={copy.details.eyebrow} intro={copy.details.intro}>
+          <MultilineTitle lines={copy.details.title} />
+        </SectionHeading>
+        <div className="detail-grid">
+          <article>
+            <span className="detail-icon"><CalendarDays size={21} strokeWidth={1.4} /></span>
+            <p>{copy.details.when}</p>
+            <h3>{copy.wedding.date}</h3>
+            <small>{copy.details.exactDate}</small>
+          </article>
+          <article>
+            <span className="detail-icon"><MapPin size={21} strokeWidth={1.4} /></span>
+            <p>{copy.details.where}</p>
+            <h3>{copy.wedding.city}</h3>
+            <small>{copy.wedding.venue}</small>
+          </article>
+        </div>
+        <button type="button" className="button button--outline" onClick={() => setRsvpOpen(true)}>{copy.details.respond} <ArrowRight size={17} /></button>
+        <p className="deadline">{copy.wedding.responseDeadline}</p>
+      </section>
+
+      <section className="scene-section paper-section" aria-label={copy.scene.imageAlt}>
+        <figure className="scene-card">
+          <img src="/assets/wedding-budapest-photo.webp" alt={copy.scene.imageAlt} loading="lazy" />
+        </figure>
+      </section>
+
+      <section className="schedule-section paper-section">
+        <SectionHeading eyebrow={copy.day.eyebrow} intro={copy.day.intro}>
+          <MultilineTitle lines={copy.day.title} />
+        </SectionHeading>
+        <div className="timeline">
+          {copy.day.schedule.map((item, index) => (
+            <article key={item.title}>
+              <div className="timeline-rail"><span>{index + 1}</span></div>
+              <div className="timeline-content">
+                <time>{item.time}{copy.day.hour ? ` ${copy.day.hour}` : ""}</time>
+                <h3>{item.title}</h3>
+                <p>{item.detail}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="practical-section paper-section">
+        <SectionHeading eyebrow={copy.practical.eyebrow}>{copy.practical.title}</SectionHeading>
+        <div className="faq-list">
+          {copy.practical.faq.map((item, index) => <FaqItem key={item.q} item={item} open={openFaq === index} onToggle={() => setOpenFaq(openFaq === index ? -1 : index)} />)}
+        </div>
+      </section>
+
+      <section className="finale">
+        <div className="finale-inner">
+          <Ornament compact />
+          <p className="verse">“{copy.wedding.verse}”</p>
+          <p className="reference">{copy.wedding.reference}</p>
+          <h2><MultilineTitle lines={copy.finale.title} /></h2>
+          <p>{copy.finale.copy}</p>
+          <button type="button" className="button button--light" onClick={() => setRsvpOpen(true)}>{copy.finale.respond} <Heart size={17} /></button>
+        </div>
+      </section>
+
+      <footer>
+        <p className="monogram">A <span>&</span> D</p>
+        <p>{copy.finale.footer}</p>
+      </footer>
+
+      <RsvpSheet open={rsvpOpen} onClose={() => setRsvpOpen(false)} copy={copy} />
+    </main>
+  );
+}
