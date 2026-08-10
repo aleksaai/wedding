@@ -119,6 +119,7 @@ function LanguageSelect({ language, onChange, copy }) {
 function RsvpSheet({ open, onClose, copy, invitation }) {
   const text = copy.rsvp;
   const [step, setStep] = useState(0);
+  const [matchedInvitation, setMatchedInvitation] = useState(null);
   const [attendance, setAttendance] = useState("");
   const [partner, setPartner] = useState(0);
   const [children, setChildren] = useState(0);
@@ -127,15 +128,17 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
   const [manualCode, setManualCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const activeInvitation = invitation || matchedInvitation;
+  const needsCode = !invitation && !matchedInvitation;
 
   useEffect(() => {
-    if (!open || !invitation?.response) return;
-    setAttendance(invitation.response.attending ? "yes" : "no");
-    setPartner(invitation.response.partner_count || 0);
-    setChildren(invitation.response.children_count || 0);
-    setDiet(invitation.response.dietary_notes || "");
-    setMessage(invitation.response.message || "");
-  }, [open, invitation]);
+    if (!open || !activeInvitation?.response) return;
+    setAttendance(activeInvitation.response.attending ? "yes" : "no");
+    setPartner(activeInvitation.response.partner_count || 0);
+    setChildren(activeInvitation.response.children_count || 0);
+    setDiet(activeInvitation.response.dietary_notes || "");
+    setMessage(activeInvitation.response.message || "");
+  }, [open, activeInvitation]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -157,35 +160,41 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
 
   function resetAndClose() {
     onClose();
-    window.setTimeout(() => setStep(0), 350);
+    window.setTimeout(() => {
+      setStep(0);
+      setMatchedInvitation(null);
+      setManualCode("");
+      setSubmitError("");
+      setAttendance("");
+      setPartner(0);
+      setChildren(0);
+      setDiet("");
+      setMessage("");
+    }, 350);
+  }
+
+  async function resolveManualCode() {
+    const invitationCode = manualCode.trim().toUpperCase();
+    setSubmitError("");
+    if (!/^[A-Z0-9]{6,12}$/.test(invitationCode)) {
+      setSubmitError(text.codeRequired);
+      return;
+    }
+
+    setSubmitting(true);
+    const { data, error } = await supabase.rpc("open_wedding_invitation", { p_code: invitationCode });
+    setSubmitting(false);
+    if (error || !data) {
+      setSubmitError(text.codeNotFound);
+      return;
+    }
+    setMatchedInvitation(data);
   }
 
   async function submit() {
     setSubmitError("");
-    let invitationCode = invitation?.code;
-
-    if (!invitationCode) {
-      invitationCode = manualCode.trim().toUpperCase();
-      if (!/^[A-Z0-9]{6,12}$/.test(invitationCode)) {
-        setSubmitError(text.codeRequired);
-        return;
-      }
-
-      setSubmitting(true);
-      const { data: matchedInvitation, error: lookupError } = await supabase.rpc("open_wedding_invitation", {
-        p_code: invitationCode,
-      });
-      if (lookupError || !matchedInvitation) {
-        setSubmitting(false);
-        setSubmitError(text.codeNotFound);
-        return;
-      }
-      if (partner > Math.max(matchedInvitation.max_adults - 1, 0) || children > matchedInvitation.max_children) {
-        setSubmitting(false);
-        setSubmitError(text.allowanceError);
-        return;
-      }
-    }
+    const invitationCode = activeInvitation?.code;
+    if (!invitationCode) return setSubmitError(text.codeRequired);
 
     setSubmitting(true);
     const { error } = await supabase.rpc("submit_wedding_rsvp", {
@@ -218,15 +227,40 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
           >
             <div className="sheet-handle" />
             <div className="sheet-topline">
-              {step < maxStep ? <span>{text.step(step + 1, maxStep)}</span> : <span>{text.saved}</span>}
+              {needsCode ? <span>{text.codeLabel}</span> : step === 3 ? <span>{text.saved}</span> : <span>{text.step(attendance === "no" && step === 2 ? 2 : step + 1, attendance === "no" ? 2 : 3)}</span>}
               <button type="button" onClick={resetAndClose} aria-label={text.close}><X size={20} /></button>
             </div>
-            <div className="progress-track"><motion.span animate={{ width: `${((step + 1) / (maxStep + 1)) * 100}%` }} /></div>
+            <div className="progress-track"><motion.span animate={{ width: needsCode ? "12%" : step === 3 ? "100%" : `${((attendance === "no" && step === 2 ? 2 : step + 1) / (attendance === "no" ? 2 : 3)) * 100}%` }} /></div>
 
             <div className="sheet-content">
               <AnimatePresence mode="wait" initial={false}>
-                <motion.div key={step} initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.2 }}>
-                  {step === 0 && (
+                <motion.div key={needsCode ? "code" : step} initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.2 }}>
+                  {needsCode && (
+                    <>
+                      <p className="eyebrow">{text.codeEyebrow}</p>
+                      <h3>{text.codeTitle}</h3>
+                      <p className="sheet-copy">{text.codeCopy}</p>
+                      <label className="field-label invitation-code-field">
+                        {text.codeLabel}
+                        <input
+                          value={manualCode}
+                          onChange={(event) => {
+                            setManualCode(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""));
+                            setSubmitError("");
+                          }}
+                          placeholder={text.codePlaceholder}
+                          maxLength={12}
+                          autoCapitalize="characters"
+                          autoComplete="off"
+                          spellCheck="false"
+                          aria-describedby="invitation-code-hint"
+                          autoFocus
+                        />
+                        <small id="invitation-code-hint">{text.codeHint}</small>
+                      </label>
+                    </>
+                  )}
+                  {!needsCode && step === 0 && (
                     <>
                       <p className="eyebrow">{text.answerEyebrow}</p>
                       <h3>{text.attendingTitle}</h3>
@@ -238,19 +272,19 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
                     </>
                   )}
 
-                  {step === 1 && (
+                  {!needsCode && step === 1 && (
                     <>
                       <p className="eyebrow">{text.companionsEyebrow}</p>
                       <h3>{text.companionsTitle}</h3>
                       <p className="sheet-copy">{text.companionsCopy}</p>
                       <div className="counter-list">
-                        <Counter label={text.partner} hint={text.partnerHint} value={partner} max={invitation ? Math.max(invitation.max_adults - 1, 0) : 11} onChange={setPartner} decreaseLabel={text.decrease(text.partner)} increaseLabel={text.increase(text.partner)} />
-                        <Counter label={text.children} hint={text.childrenHint} value={children} max={invitation ? invitation.max_children : 12} onChange={setChildren} decreaseLabel={text.decrease(text.children)} increaseLabel={text.increase(text.children)} />
+                        <Counter label={text.partner} hint={text.partnerHint} value={partner} max={Math.max(activeInvitation.max_adults - 1, 0)} onChange={setPartner} decreaseLabel={text.decrease(text.partner)} increaseLabel={text.increase(text.partner)} />
+                        <Counter label={text.children} hint={text.childrenHint} value={children} max={activeInvitation.max_children} onChange={setChildren} decreaseLabel={text.decrease(text.children)} increaseLabel={text.increase(text.children)} />
                       </div>
                     </>
                   )}
 
-                  {step === 2 && (
+                  {!needsCode && step === 2 && (
                     <>
                       <p className="eyebrow">{text.almost}</p>
                       <h3>{attendance === "no" ? text.finalNoTitle : text.finalYesTitle}</h3>
@@ -265,29 +299,10 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
                         {text.message} <span>{text.optional}</span>
                         <textarea value={message} onChange={(event) => setMessage(event.target.value)} placeholder={text.messagePlaceholder} rows={3} />
                       </label>
-                      {!invitation && (
-                        <label className="field-label invitation-code-field">
-                          {text.codeLabel}
-                          <input
-                            value={manualCode}
-                            onChange={(event) => {
-                              setManualCode(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""));
-                              setSubmitError("");
-                            }}
-                            placeholder={text.codePlaceholder}
-                            maxLength={12}
-                            autoCapitalize="characters"
-                            autoComplete="off"
-                            spellCheck="false"
-                            aria-describedby="invitation-code-hint"
-                          />
-                          <small id="invitation-code-hint">{text.codeHint}</small>
-                        </label>
-                      )}
                     </>
                   )}
 
-                  {step === 3 && (
+                  {!needsCode && step === 3 && (
                     <div className="success-state">
                       <motion.span initial={{ scale: 0.5 }} animate={{ scale: 1 }} className="success-seal"><Check size={28} /></motion.span>
                       <p className="eyebrow">{text.thanks}</p>
@@ -301,10 +316,12 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
 
             <div className="sheet-actions">
               {submitError && <p className="rsvp-error">{submitError}</p>}
-              {step > 0 && step < 3 && <button type="button" className="button button--ghost" onClick={back}><ArrowLeft size={17} /> {text.back}</button>}
-              {step < 2 && <button type="button" className="button button--primary" disabled={nextDisabled} onClick={next}>{text.next} <ArrowRight size={17} /></button>}
-              {step === 2 && <button type="button" className="button button--primary" disabled={submitting || (!invitation && !/^[A-Z0-9]{6,12}$/.test(manualCode))} onClick={submit}>{submitting ? text.sending : text.send} <ArrowRight size={17} /></button>}
-              {step === 3 && <button type="button" className="button button--primary" onClick={resetAndClose}>{text.return}</button>}
+              {needsCode ? <button type="button" className="button button--primary" disabled={submitting || !/^[A-Z0-9]{6,12}$/.test(manualCode)} onClick={resolveManualCode}>{submitting ? text.checkingCode : text.next} <ArrowRight size={17} /></button> : <>
+                {step > 0 && step < 3 && <button type="button" className="button button--ghost" onClick={back}><ArrowLeft size={17} /> {text.back}</button>}
+                {step < 2 && <button type="button" className="button button--primary" disabled={nextDisabled} onClick={next}>{text.next} <ArrowRight size={17} /></button>}
+                {step === 2 && <button type="button" className="button button--primary" disabled={submitting} onClick={submit}>{submitting ? text.sending : text.send} <ArrowRight size={17} /></button>}
+                {step === 3 && <button type="button" className="button button--primary" onClick={resetAndClose}>{text.return}</button>}
+              </>}
             </div>
           </motion.section>
         </motion.div>

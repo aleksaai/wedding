@@ -64,6 +64,12 @@ const statusLabels = {
 };
 
 const cardLanguages = new Set(["de", "en", "hu", "sr"]);
+const cardCodeLabels = {
+  de: "Einladungscode",
+  en: "Invitation code",
+  hu: "Meghívókód",
+  sr: "Kod pozivnice",
+};
 
 function cardAssets(language) {
   const normalized = cardLanguages.has(language) ? language.toUpperCase() : "EN";
@@ -80,7 +86,7 @@ function openPrintableCard(invitation) {
   const assets = cardAssets(invitation.default_language);
   const front = new URL(assets.front, window.location.origin).href;
   const back = new URL(assets.back, window.location.origin).href;
-  const personalUrl = `${weddingHost}/${invitation.code}`;
+  const personalCode = `${cardCodeLabels[invitation.default_language] || cardCodeLabels.en}: ${invitation.code}`;
   popup.document.write(`<!doctype html>
     <html><head><meta charset="utf-8"><title>Wedding invitation</title>
     <style>
@@ -95,7 +101,7 @@ function openPrintableCard(invitation) {
       @media print { html, body { background: transparent; } .page { margin: 0; box-shadow: none; } }
     </style></head><body>
       <section class="page"><img src="${front}" alt="Wedding invitation front"></section>
-      <section class="page"><img src="${back}" alt="Wedding invitation back"><div class="personal-link">${personalUrl}</div></section>
+      <section class="page"><img src="${back}" alt="Wedding invitation back"><div class="personal-link">${personalCode}</div></section>
       <script>Promise.all(Array.from(document.images).map((image) => image.decode())).then(() => { window.focus(); window.print(); });<\/script>
     </body></html>`);
   popup.document.close();
@@ -247,7 +253,7 @@ function CardDrawer({ invitation, onClose, onGenerated, onCopyLink }) {
         </header>
         <div className="card-preview-pair">
           <figure><div className="card-sheet"><img src={assets.front} alt={`${invitation.default_language.toUpperCase()} invitation front`} /></div><figcaption>Front</figcaption></figure>
-          <figure><div className="card-sheet card-sheet--back"><img src={assets.back} alt={`${invitation.default_language.toUpperCase()} invitation back`} /><span>{weddingHost}/{invitation.code}</span></div><figcaption>Back · personal link</figcaption></figure>
+          <figure><div className="card-sheet card-sheet--back"><img src={assets.back} alt={`${invitation.default_language.toUpperCase()} invitation back`} /><span>{cardCodeLabels[invitation.default_language] || cardCodeLabels.en}: {invitation.code}</span></div><figcaption>Back · invitation code</figcaption></figure>
         </div>
         <div className="card-personal-link"><span>Personal invitation</span><code>https://{weddingHost}/{invitation.code}</code></div>
         <div className="card-actions">
@@ -256,7 +262,7 @@ function CardDrawer({ invitation, onClose, onGenerated, onCopyLink }) {
           <a className="admin-button" href={assets.front} download={`${invitation.code}-${invitation.default_language.toUpperCase()}-FRONT.png`}><Download size={16} />Original front</a>
           <a className="admin-button" href={assets.back} download={`${invitation.code}-${invitation.default_language.toUpperCase()}-BACK.png`}><Download size={16} />Original back</a>
         </div>
-        <p className="card-note">The artwork is the approved final design. Only the personal invitation link is added in the unused lower margin of the printed back.</p>
+        <p className="card-note">The artwork is the approved final design. Only the invitation code is added in the unused lower margin of the printed back. Personal links remain available digitally.</p>
       </section>
     </div>
   );
