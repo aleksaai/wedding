@@ -112,6 +112,7 @@
 .card-actions { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 9px; }
 .card-actions a { text-decoration: none; }
 .card-note { margin: 16px 0 0; color: var(--admin-muted); font-size: .76rem; line-height: 1.5; }
+.card-download-error { margin: 13px 0 0; font-size: .78rem; }
 .admin-toast { position: fixed; right: 24px; bottom: 24px; z-index: 150; padding: 12px 17px; border-radius: 10px; color: white; background: var(--admin-ink); box-shadow: 0 12px 40px rgba(15,31,44,.24); }
 .admin-login { min-height: 100svh; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at 25% 10%, rgba(255,255,255,.9), transparent 38%), #eee7dc; }
 .login-card { width: min(470px, 100%); padding: clamp(28px, 5vw, 52px); border: 1px solid rgba(255,255,255,.8); border-radius: 24px; background: rgba(250,247,241,.76); backdrop-filter: blur(20px); box-shadow: 0 25px 80px rgba(68,57,40,.13); }

@@ -108,6 +108,87 @@ function openPrintableCard(invitation) {
   return true;
 }
 
+function pngChunk(type, data) {
+  const typeBytes = new TextEncoder().encode(type);
+  const chunk = new Uint8Array(12 + data.length);
+  const view = new DataView(chunk.buffer);
+  view.setUint32(0, data.length);
+  chunk.set(typeBytes, 4);
+  chunk.set(data, 8);
+  let crc = 0xffffffff;
+  for (let index = 4; index < 8 + data.length; index += 1) {
+    crc ^= chunk[index];
+    for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+  }
+  view.setUint32(8 + data.length, (crc ^ 0xffffffff) >>> 0);
+  return chunk;
+}
+
+async function withPngDensity(blob, dpi = 300) {
+  const source = new Uint8Array(await blob.arrayBuffer());
+  const pixelsPerMetre = Math.round(dpi / 0.0254);
+  const density = new Uint8Array(9);
+  const densityView = new DataView(density.buffer);
+  densityView.setUint32(0, pixelsPerMetre);
+  densityView.setUint32(4, pixelsPerMetre);
+  density[8] = 1;
+  const densityChunk = pngChunk("pHYs", density);
+  const parts = [source.slice(0, 8)];
+  let offset = 8;
+  let densityAdded = false;
+
+  while (offset < source.length) {
+    const length = new DataView(source.buffer, source.byteOffset + offset, 4).getUint32(0);
+    const end = offset + length + 12;
+    const type = new TextDecoder().decode(source.slice(offset + 4, offset + 8));
+    if (type !== "pHYs") parts.push(source.slice(offset, end));
+    if (type === "IHDR" && !densityAdded) {
+      parts.push(densityChunk);
+      densityAdded = true;
+    }
+    offset = end;
+  }
+
+  return new Blob(parts, { type: "image/png" });
+}
+
+async function downloadPersonalizedBack(invitation) {
+  const { back } = cardAssets(invitation.default_language);
+  const response = await fetch(back);
+  if (!response.ok) throw new Error("Card artwork could not be loaded");
+  const sourceBlob = await response.blob();
+  const objectUrl = URL.createObjectURL(sourceBlob);
+  const image = new Image();
+  image.src = objectUrl;
+  await image.decode();
+
+  const canvas = document.createElement("canvas");
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const context = canvas.getContext("2d");
+  context.drawImage(image, 0, 0);
+  URL.revokeObjectURL(objectUrl);
+
+  await document.fonts?.load('600 35px "Avenir Next"');
+  context.fillStyle = "#182b3d";
+  context.font = '600 35px "Avenir Next", Avenir, Helvetica, sans-serif';
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  const personalCode = `${cardCodeLabels[invitation.default_language] || cardCodeLabels.en}: ${invitation.code}`;
+  context.fillText(personalCode, canvas.width / 2, canvas.height - 130);
+
+  const renderedBlob = await new Promise((resolve, reject) => canvas.toBlob((result) => result ? resolve(result) : reject(new Error("Card image could not be generated")), "image/png"));
+  const downloadBlob = await withPngDensity(renderedBlob, 300);
+  const downloadUrl = URL.createObjectURL(downloadBlob);
+  const link = document.createElement("a");
+  link.href = downloadUrl;
+  link.download = `${invitation.code}-${invitation.default_language.toUpperCase()}-BACK-personalized.png`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+}
+
 function LoginScreen() {
   const [email, setEmail] = useState("");
   const [state, setState] = useState("idle");
@@ -236,11 +317,30 @@ function InviteForm({ open, onClose, onSaved, invitation, defaultBackup = false 
 }
 
 function CardDrawer({ invitation, onClose, onGenerated, onCopyLink }) {
+  const [downloadingBack, setDownloadingBack] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
+  useEffect(() => {
+    setDownloadingBack(false);
+    setDownloadError("");
+  }, [invitation?.id]);
   if (!invitation) return null;
   const assets = cardAssets(invitation.default_language);
 
   function printCard() {
     if (openPrintableCard(invitation)) onGenerated(invitation);
+  }
+
+  async function downloadBack() {
+    setDownloadingBack(true);
+    setDownloadError("");
+    try {
+      await downloadPersonalizedBack(invitation);
+      onGenerated(invitation);
+    } catch (error) {
+      setDownloadError(error.message || "The personalized back could not be downloaded.");
+    } finally {
+      setDownloadingBack(false);
+    }
   }
 
   return (
@@ -259,9 +359,10 @@ function CardDrawer({ invitation, onClose, onGenerated, onCopyLink }) {
         <div className="card-actions">
           <button className="admin-button admin-button--dark" onClick={printCard}><Printer size={17} />Print / save as PDF</button>
           <button className="admin-button" onClick={() => onCopyLink(invitation.code)}><Clipboard size={16} />Copy link</button>
-          <a className="admin-button" href={assets.front} download={`${invitation.code}-${invitation.default_language.toUpperCase()}-FRONT.png`}><Download size={16} />Original front</a>
-          <a className="admin-button" href={assets.back} download={`${invitation.code}-${invitation.default_language.toUpperCase()}-BACK.png`}><Download size={16} />Original back</a>
+          <a className="admin-button" href={assets.front} download={`${invitation.code}-${invitation.default_language.toUpperCase()}-FRONT.png`}><Download size={16} />Download front</a>
+          <button className="admin-button" onClick={downloadBack} disabled={downloadingBack}><Download size={16} />{downloadingBack ? "Creating back…" : "Download personalized back"}</button>
         </div>
+        {downloadError && <p className="form-error card-download-error">{downloadError}</p>}
         <p className="card-note">The artwork is the approved final design. Only the invitation code is added in the unused lower margin of the printed back. Personal links remain available digitally.</p>
       </section>
     </div>
