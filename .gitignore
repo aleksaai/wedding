@@ -1,6 +1,7 @@
 node_modules/
 dist/
 qa/
+supabase/.temp/
 
 .env
 .env.*
