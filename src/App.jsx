@@ -15,7 +15,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { languageOptions, translations } from "./i18n.js";
+import { eventDetails, languageOptions, translations } from "./i18n.js";
 
 function getInitialLanguage() {
   const requested = new URLSearchParams(window.location.search).get("lang");
@@ -304,9 +304,17 @@ export function App() {
           </article>
           <article>
             <span className="detail-icon"><MapPin size={21} strokeWidth={1.4} /></span>
-            <p>{copy.details.where}</p>
-            <h3>{copy.wedding.city}</h3>
-            <small>{copy.wedding.venue}</small>
+            <p>{copy.details.ceremony}</p>
+            <h3>{copy.details.startsAt("14:00")}</h3>
+            <small>{eventDetails.churchAddress}</small>
+            <a className="map-link" href={eventDetails.churchMapUrl} target="_blank" rel="noreferrer">{copy.details.openMap} <ArrowRight size={13} /></a>
+          </article>
+          <article>
+            <span className="detail-icon"><MapPin size={21} strokeWidth={1.4} /></span>
+            <p>{copy.details.reception}</p>
+            <h3>{copy.details.startsAt("17:00")}</h3>
+            <small>{eventDetails.venueAddress}</small>
+            <a className="map-link" href={eventDetails.venueMapUrl} target="_blank" rel="noreferrer">{copy.details.openMap} <ArrowRight size={13} /></a>
           </article>
         </div>
         <button type="button" className="button button--outline" onClick={() => setRsvpOpen(true)}>{copy.details.respond} <ArrowRight size={17} /></button>
@@ -358,6 +366,11 @@ export function App() {
       <footer>
         <p className="monogram">A <span>&</span> D</p>
         <p>{copy.finale.footer}</p>
+        <div className="footer-contact" aria-label={copy.finale.contact}>
+          <a href={eventDetails.websiteUrl}>{eventDetails.website}</a>
+          <a href={`mailto:${eventDetails.email}`}>{eventDetails.email}</a>
+          <a href={`tel:${eventDetails.phone}`}>{eventDetails.phoneDisplay}</a>
+        </div>
       </footer>
 
       <RsvpSheet open={rsvpOpen} onClose={() => setRsvpOpen(false)} copy={copy} />

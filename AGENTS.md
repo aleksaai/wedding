@@ -15,7 +15,7 @@ Build app UI in `src/`. Keep `.openai/hosting.json`, `worker/index.js`, `scripts
 - The documentary Budapest image below the details section uses `public/assets/wedding-budapest-photo.webp`. Present it as a horizontal 16:9 image card with a restrained ivory/gold frame on both mobile and desktop; do not add a caption or text overlay.
 - The personal invitation link should open directly without login or code entry. RSVP is a short progressive flow rather than one long form.
 - The website supports four complete languages: German (`de`), Hungarian (`hu`), Serbian in Latin script (`sr`), and English (`en`). Personal invitation links select the language through `?lang=`; keep the manual language switch available as a fallback.
-- Until final event details are confirmed, keep all placeholder content centralized by language in `src/i18n.js`.
+- Canonical event details live in `src/i18n.js`: Aleksa Spalevic & Debora Szilagyi; wedding 23.01.2027; church at Wesselényi utca 53, 1077 Budapest from 14:00; reception at Pollack Mihály tér 3, 1088 Budapest from 17:00; RSVP deadline 31.10.2026; contact `szildebora@gmail.com` / `+36 20 346 7329`. Keep shared addresses, map URLs, website, email, and phone centralized in `eventDetails`; keep user-facing copy localized in all four translation objects.
 
 ## Local credentials
 
