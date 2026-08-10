@@ -7,6 +7,7 @@ import {
   LogOut,
   Mail,
   Plus,
+  RotateCcw,
   Search,
   Send,
   Users,
@@ -31,6 +32,7 @@ const emptyForm = {
   max_adults: 1,
   max_children: 0,
   internal_notes: "",
+  is_backup: false,
 };
 
 function makeCode() {
@@ -40,6 +42,7 @@ function makeCode() {
 }
 
 function statusOf(invitation) {
+  if (invitation.is_backup) return "backup";
   if (invitation.responded_at) return invitation.wedding_rsvps?.attending ? "attending" : "declined";
   if (invitation.first_opened_at) return "opened";
   if (invitation.sent_at) return "sent";
@@ -54,6 +57,7 @@ const statusLabels = {
   opened: "Opened",
   attending: "Attending",
   declined: "Declined",
+  backup: "Backup",
 };
 
 function LoginScreen() {
@@ -113,7 +117,7 @@ function AccessDenied({ email }) {
   );
 }
 
-function InviteForm({ open, onClose, onSaved, invitation }) {
+function InviteForm({ open, onClose, onSaved, invitation, defaultBackup = false }) {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -126,9 +130,10 @@ function InviteForm({ open, onClose, onSaved, invitation }) {
       max_adults: invitation.max_adults,
       max_children: invitation.max_children,
       internal_notes: invitation.internal_notes || "",
-    } : emptyForm);
+      is_backup: invitation.is_backup,
+    } : { ...emptyForm, is_backup: defaultBackup });
     setError("");
-  }, [invitation, open]);
+  }, [invitation, open, defaultBackup]);
 
   if (!open) return null;
 
@@ -169,6 +174,7 @@ function InviteForm({ open, onClose, onSaved, invitation }) {
           <label className="field-wide">Name on invitation<input required maxLength={160} value={form.display_name} onChange={(event) => update("display_name", event.target.value)} placeholder="e.g. Lukas & Anna" /></label>
           <label>Group<select value={form.category} onChange={(event) => changeCategory(event.target.value)}>{Object.entries(categories).map(([value, item]) => <option key={value} value={value}>{item.label}</option>)}</select></label>
           <label>Default language<select value={form.default_language} onChange={(event) => update("default_language", event.target.value)}><option value="de">German</option><option value="hu">Hungarian</option><option value="sr">Serbian</option><option value="en">English</option></select></label>
+          <label>List<select value={form.is_backup ? "backup" : "active"} onChange={(event) => update("is_backup", event.target.value === "backup")}><option value="active">Guest list</option><option value="backup">Backup list</option></select></label>
           <label>Adults<input type="number" min="1" max="12" value={form.max_adults} onChange={(event) => update("max_adults", event.target.value)} /></label>
           <label>Children<input type="number" min="0" max="12" value={form.max_children} onChange={(event) => update("max_children", event.target.value)} /></label>
           <label className="field-wide">Internal notes<textarea rows="3" maxLength={2000} value={form.internal_notes} onChange={(event) => update("internal_notes", event.target.value)} placeholder="Half price, family details, card note…" /></label>
@@ -192,6 +198,7 @@ function ResponseDrawer({ invitation, onClose }) {
         <dl className="response-facts">
           <div><dt>Group</dt><dd>{categories[invitation.category].label}</dd></div>
           <div><dt>Language</dt><dd>{invitation.default_language.toUpperCase()}</dd></div>
+          <div><dt>List</dt><dd>{invitation.is_backup ? "Backup list" : "Guest list"}</dd></div>
           <div><dt>Allowed</dt><dd>{invitation.max_adults} adults · {invitation.max_children} children</dd></div>
           <div><dt>Opens</dt><dd>{invitation.open_count}</dd></div>
         </dl>
@@ -223,6 +230,7 @@ export function AdminApp() {
   const [formOpen, setFormOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [notice, setNotice] = useState("");
+  const [listView, setListView] = useState("active");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setAuthReady(true); });
@@ -261,16 +269,23 @@ export function AdminApp() {
   const filtered = useMemo(() => invitations.filter((invitation) => {
     const query = search.trim().toLowerCase();
     return (!query || `${invitation.display_name} ${invitation.code} ${invitation.internal_notes || ""}`.toLowerCase().includes(query))
+      && invitation.is_backup === (listView === "backup")
       && (category === "all" || invitation.category === category)
       && (status === "all" || statusOf(invitation) === status);
-  }), [invitations, search, category, status]);
+  }), [invitations, search, category, status, listView]);
 
-  const totals = useMemo(() => ({
-    invitations: invitations.length,
-    invited: invitations.reduce((sum, item) => sum + item.max_adults + item.max_children, 0),
-    responses: invitations.filter((item) => item.responded_at).length,
-    attending: invitations.reduce((sum, item) => sum + (item.wedding_rsvps?.attending ? 1 + item.wedding_rsvps.partner_count + item.wedding_rsvps.children_count : 0), 0),
-  }), [invitations]);
+  const totals = useMemo(() => {
+    const active = invitations.filter((item) => !item.is_backup);
+    const backup = invitations.filter((item) => item.is_backup);
+    return {
+      invitations: active.length,
+      invited: active.reduce((sum, item) => sum + item.max_adults + item.max_children, 0),
+      responses: active.filter((item) => item.responded_at).length,
+      attending: active.reduce((sum, item) => sum + (item.wedding_rsvps?.attending ? 1 + item.wedding_rsvps.partner_count + item.wedding_rsvps.children_count : 0), 0),
+      backupInvitations: backup.length,
+      backupPeople: backup.reduce((sum, item) => sum + item.max_adults + item.max_children, 0),
+    };
+  }, [invitations]);
 
   async function mark(invitation, field) {
     const value = invitation[field] ? null : new Date().toISOString();
@@ -284,6 +299,16 @@ export function AdminApp() {
     window.setTimeout(() => setNotice(""), 1800);
   }
 
+  async function promote(invitation) {
+    const { error } = await supabase.from("wedding_invitations").update({ is_backup: false }).eq("id", invitation.id);
+    if (error) setNotice(error.message);
+    else {
+      setNotice(`${invitation.display_name} moved to the guest list`);
+      loadInvitations();
+      window.setTimeout(() => setNotice(""), 2200);
+    }
+  }
+
   if (!authReady) return <main className="route-state"><div className="route-seal">A <span>&</span> D</div></main>;
   if (!session) return <LoginScreen />;
   if (access === "checking") return <main className="route-state"><div className="route-seal">A <span>&</span> D</div><p>Checking access…</p></main>;
@@ -294,16 +319,26 @@ export function AdminApp() {
       <aside className="admin-sidebar">
         <a href="/" className="admin-mark">A <span>&</span> D</a>
         <div><p className="admin-kicker">Wedding workspace</p><h2>23 Jan 2027</h2></div>
-        <nav><a className="is-active" href="#guests"><Users size={18} />Guest list</a></nav>
+        <nav>
+          <button className={listView === "active" ? "is-active" : ""} onClick={() => { setListView("active"); setStatus("all"); }}><Users size={18} />Guest list <small>{totals.invitations}</small></button>
+          <button className={listView === "backup" ? "is-active" : ""} onClick={() => { setListView("backup"); setStatus("all"); }}><RotateCcw size={18} />Backup list <small>{totals.backupInvitations}</small></button>
+        </nav>
         <button className="admin-signout" onClick={() => supabase.auth.signOut()} title={session.user.email}><LogOut size={17} />Sign out</button>
       </aside>
       <section className="admin-main" id="guests">
-        <header className="admin-header"><div><p className="admin-kicker">Aleksa & Debora</p><h1>Guest list</h1><p>One invitation, one private link, one clear response.</p></div><button className="admin-button admin-button--dark" onClick={() => { setEditing(null); setFormOpen(true); }}><Plus size={18} />Add invitation</button></header>
+        <header className="admin-header"><div><p className="admin-kicker">Aleksa & Debora</p><h1>{listView === "active" ? "Guest list" : "Backup list"}</h1><p>{listView === "active" ? "One invitation, one private link, one clear response." : "Reserve guests who can move up when a place becomes available."}</p></div><button className="admin-button admin-button--dark" onClick={() => { setEditing(null); setFormOpen(true); }}><Plus size={18} />{listView === "active" ? "Add invitation" : "Add backup guest"}</button></header>
         <section className="admin-stats">
-          <article><span>Invitations</span><strong>{totals.invitations}</strong></article>
-          <article><span>Invited people</span><strong>{totals.invited}</strong></article>
-          <article><span>Responses</span><strong>{totals.responses}<small> / {totals.invitations}</small></strong></article>
-          <article><span>Attending</span><strong>{totals.attending}</strong></article>
+          {listView === "active" ? <>
+            <article><span>Invitations</span><strong>{totals.invitations}</strong></article>
+            <article><span>Invited people</span><strong>{totals.invited}</strong></article>
+            <article><span>Responses</span><strong>{totals.responses}<small> / {totals.invitations}</small></strong></article>
+            <article><span>Attending</span><strong>{totals.attending}</strong></article>
+          </> : <>
+            <article><span>Backup households</span><strong>{totals.backupInvitations}</strong></article>
+            <article><span>Backup people</span><strong>{totals.backupPeople}</strong></article>
+            <article><span>Active invitations</span><strong>{totals.invitations}</strong></article>
+            <article><span>Active people</span><strong>{totals.invited}</strong></article>
+          </>}
         </section>
         <section className="guest-board">
           <div className="board-toolbar">
@@ -320,10 +355,10 @@ export function AdminApp() {
                   return <tr key={invitation.id} onDoubleClick={() => { setEditing(invitation); setFormOpen(true); }}>
                     <td><button className="guest-name" onClick={() => setSelected(invitation)}>{invitation.display_name}<small>{invitation.code} · {invitation.default_language.toUpperCase()}</small></button></td>
                     <td><span className={`group-pill ${invitation.category}`}>{categories[invitation.category].label}</span></td>
-                    <td>{invitation.max_adults}A{invitation.max_children ? ` + ${invitation.max_children}C` : ""}</td>
+                    <td><span className="people-count">{invitation.max_adults} {invitation.max_adults === 1 ? "adult" : "adults"}{invitation.max_children ? ` · ${invitation.max_children} ${invitation.max_children === 1 ? "child" : "children"}` : ""}</span></td>
                     <td><span className={`status-pill ${inviteStatus}`}>{statusLabels[inviteStatus]}</span></td>
-                    <td><div className="progress-actions"><button className={invitation.card_generated_at ? "done" : ""} onClick={() => mark(invitation, "card_generated_at")} title="Card ready"><CheckCircle2 size={17} /></button><button className={invitation.sent_at ? "done" : ""} onClick={() => mark(invitation, "sent_at")} title="Sent"><Send size={16} /></button><span title={`${invitation.open_count} opens`}>{invitation.open_count}</span></div></td>
-                    <td><button className="copy-button" onClick={() => copyLink(invitation.code)}><Clipboard size={15} />Copy</button></td>
+                    <td>{invitation.is_backup ? <button className="promote-button" onClick={() => promote(invitation)}><Users size={15} />Move to guest list</button> : <div className="progress-actions"><button className={invitation.card_generated_at ? "done" : ""} onClick={() => mark(invitation, "card_generated_at")} title="Card ready"><CheckCircle2 size={17} /></button><button className={invitation.sent_at ? "done" : ""} onClick={() => mark(invitation, "sent_at")} title="Sent"><Send size={16} /></button><span title={`${invitation.open_count} opens`}>{invitation.open_count}</span></div>}</td>
+                    <td>{invitation.is_backup ? <span className="not-invited">Not invited</span> : <button className="copy-button" onClick={() => copyLink(invitation.code)}><Clipboard size={15} />Copy</button>}</td>
                   </tr>;
                 })}
               </tbody>
@@ -332,7 +367,7 @@ export function AdminApp() {
         </section>
       </section>
       {notice && <div className="admin-toast">{notice}</div>}
-      <InviteForm open={formOpen} invitation={editing} onClose={() => setFormOpen(false)} onSaved={() => { setFormOpen(false); loadInvitations(); }} />
+      <InviteForm open={formOpen} invitation={editing} defaultBackup={listView === "backup"} onClose={() => setFormOpen(false)} onSaved={() => { setFormOpen(false); loadInvitations(); }} />
       <ResponseDrawer invitation={selected} onClose={() => setSelected(null)} />
     </main>
   );

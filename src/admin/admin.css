@@ -22,8 +22,10 @@
 .admin-sidebar .admin-mark { color: #fff; text-decoration: none; font-size: 1.15rem; }
 .admin-sidebar h2 { margin: 5px 0 0; font-family: Georgia, serif; font-size: 1.55rem; font-weight: 400; }
 .admin-kicker { margin: 0; color: var(--admin-gold); font-size: .68rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
-.admin-sidebar nav a { display: flex; align-items: center; gap: 11px; padding: 12px 14px; border-radius: 10px; color: rgba(255,255,255,.72); text-decoration: none; }
-.admin-sidebar nav a.is-active { color: white; background: rgba(255,255,255,.1); }
+.admin-sidebar nav { display: grid; gap: 6px; }
+.admin-sidebar nav a, .admin-sidebar nav button { width: 100%; display: flex; align-items: center; gap: 11px; padding: 12px 14px; border: 0; border-radius: 10px; color: rgba(255,255,255,.72); background: transparent; font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.admin-sidebar nav a.is-active, .admin-sidebar nav button.is-active { color: white; background: rgba(255,255,255,.1); }
+.admin-sidebar nav small { min-width: 22px; margin-left: auto; padding: 3px 6px; border-radius: 999px; color: rgba(255,255,255,.72); background: rgba(255,255,255,.1); font-size: .65rem; text-align: center; }
 .admin-signout { margin-top: auto; display: flex; align-items: center; gap: 9px; border: 0; background: none; color: rgba(255,255,255,.65); cursor: pointer; }
 .admin-main { min-width: 0; padding: clamp(28px, 5vw, 72px); }
 .admin-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
@@ -59,11 +61,15 @@
 .status-pill.declined { background: #f1e0de; color: #8a3d36; }
 .status-pill.opened { background: #e6eaf3; color: #3c4f78; }
 .status-pill.sent { background: #eee8d8; color: #76632f; }
+.status-pill.backup { background: #f2e7cf; color: #775b25; }
+.people-count { white-space: nowrap; }
 .progress-actions { display: flex; align-items: center; gap: 7px; }
 .progress-actions button { width: 29px; height: 29px; display: grid; place-items: center; border: 1px solid var(--admin-line); border-radius: 7px; color: #a6abae; background: white; cursor: pointer; }
 .progress-actions button.done { color: #3d7250; background: #e4f1e8; }
 .progress-actions span { min-width: 26px; text-align: center; color: #879095; font-size: .72rem; }
 .copy-button { display: flex; align-items: center; gap: 6px; border: 0; background: none; color: var(--admin-ink); font-weight: 700; cursor: pointer; }
+.promote-button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border: 1px solid rgba(45,99,64,.18); border-radius: 8px; color: #315f40; background: #e9f2eb; font-size: .72rem; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.not-invited { color: #9a8b70; font-size: .72rem; white-space: nowrap; }
 .empty-row { padding: 60px !important; text-align: center; color: var(--admin-muted) !important; }
 .admin-modal-layer { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; }
 .admin-modal-backdrop { position: absolute; inset: 0; border: 0; background: rgba(15,31,44,.5); backdrop-filter: blur(7px); }
@@ -108,7 +114,10 @@
 @media (max-width: 900px) {
   .admin-shell { display: block; }
   .admin-sidebar { position: static; width: 100%; height: auto; padding: 18px 22px; flex-direction: row; align-items: center; gap: 20px; }
-  .admin-sidebar > div, .admin-sidebar nav { display: none; }
+  .admin-sidebar > div { display: none; }
+  .admin-sidebar nav { display: flex; gap: 4px; }
+  .admin-sidebar nav button { width: auto; padding: 9px 10px; font-size: .75rem; }
+  .admin-sidebar nav small { display: none; }
   .admin-signout { margin: 0 0 0 auto; }
   .admin-main { padding: 28px 18px 60px; }
   .admin-stats { grid-template-columns: 1fr 1fr; }
@@ -119,6 +128,10 @@
 }
 
 @media (max-width: 560px) {
+  .admin-sidebar { gap: 7px; padding-inline: 14px; }
+  .admin-sidebar .admin-mark { display: none; }
+  .admin-sidebar nav { flex: 1; }
+  .admin-signout { width: 38px; height: 38px; justify-content: center; font-size: 0; }
   .admin-header { align-items: stretch; flex-direction: column; }
   .admin-header .admin-button { width: 100%; }
   .admin-stats article { padding: 16px; }
