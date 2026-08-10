@@ -74,8 +74,8 @@
 .admin-modal-layer { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; }
 .admin-modal-backdrop { position: absolute; inset: 0; border: 0; background: rgba(15,31,44,.5); backdrop-filter: blur(7px); }
 .invite-form-panel { position: relative; z-index: 1; width: min(650px, 100%); max-height: calc(100svh - 40px); overflow: auto; padding: 28px; border: 1px solid rgba(255,255,255,.55); border-radius: 20px; background: #f8f4ed; box-shadow: 0 30px 100px rgba(9,23,35,.25); }
-.invite-form-panel header, .response-drawer header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-.invite-form-panel h2, .response-drawer h2 { margin: 6px 0 0; font-family: Georgia, serif; font-size: 2rem; font-weight: 400; }
+.invite-form-panel header, .response-drawer header, .card-drawer header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.invite-form-panel h2, .response-drawer h2, .card-drawer h2 { margin: 6px 0 0; font-family: Georgia, serif; font-size: 2rem; font-weight: 400; }
 .icon-button { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--admin-line); border-radius: 50%; background: white; cursor: pointer; }
 .invite-form-panel form { margin-top: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 17px; }
 .invite-form-panel label, .login-card label { display: grid; gap: 7px; color: #59646b; font-size: .76rem; font-weight: 700; }
@@ -97,6 +97,21 @@
 .response-card h3 { font-family: Georgia, serif; font-size: 1.7rem; font-weight: 400; }
 .response-card div { margin-top: 18px; }
 .response-card p, .notes-card p { line-height: 1.55; }
+.card-drawer-layer { place-items: center; padding: 24px; }
+.card-drawer { position: relative; z-index: 1; width: min(1120px, 100%); max-height: calc(100svh - 48px); overflow: auto; padding: clamp(22px, 3vw, 38px); border: 1px solid rgba(255,255,255,.62); border-radius: 24px; background: #f5efe6; box-shadow: 0 34px 110px rgba(9,23,35,.3); }
+.card-drawer header > div > p:last-child { margin: 8px 0 0; color: var(--admin-muted); font-size: .82rem; }
+.card-preview-pair { margin-top: 28px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(18px, 3vw, 36px); align-items: start; }
+.card-preview-pair figure { margin: 0; display: grid; justify-items: center; gap: 10px; }
+.card-preview-pair figcaption { color: var(--admin-muted); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
+.card-sheet { position: relative; width: min(100%, 355px); aspect-ratio: 2 / 3; overflow: hidden; background: #f8f5ee; box-shadow: 0 22px 55px rgba(40,34,25,.16), 0 0 0 1px rgba(116,94,62,.1); }
+.card-sheet img { width: 100%; height: 100%; display: block; object-fit: fill; }
+.card-sheet--back span { position: absolute; left: 7%; right: 7%; bottom: 6.1%; overflow: hidden; color: #182b3d; font-family: "Avenir Next", Avenir, sans-serif; font-size: clamp(.43rem, 1vw, .67rem); font-weight: 600; letter-spacing: .025em; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.card-personal-link { margin-top: 24px; padding: 14px 16px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 18px; border: 1px solid rgba(174,138,88,.28); border-radius: 12px; background: rgba(255,255,255,.55); }
+.card-personal-link span { color: var(--admin-gold); font-size: .68rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.card-personal-link code { overflow: hidden; color: var(--admin-ink); font-size: .82rem; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.card-actions { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 9px; }
+.card-actions a { text-decoration: none; }
+.card-note { margin: 16px 0 0; color: var(--admin-muted); font-size: .76rem; line-height: 1.5; }
 .admin-toast { position: fixed; right: 24px; bottom: 24px; z-index: 150; padding: 12px 17px; border-radius: 10px; color: white; background: var(--admin-ink); box-shadow: 0 12px 40px rgba(15,31,44,.24); }
 .admin-login { min-height: 100svh; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at 25% 10%, rgba(255,255,255,.9), transparent 38%), #eee7dc; }
 .login-card { width: min(470px, 100%); padding: clamp(28px, 5vw, 52px); border: 1px solid rgba(255,255,255,.8); border-radius: 24px; background: rgba(250,247,241,.76); backdrop-filter: blur(20px); box-shadow: 0 25px 80px rgba(68,57,40,.13); }
@@ -142,4 +157,11 @@
   .invite-form-panel form { grid-template-columns: 1fr; }
   .field-wide { grid-column: auto; }
   .response-drawer { padding: 26px 20px; }
+  .card-drawer-layer { padding: 0; place-items: stretch; }
+  .card-drawer { width: 100%; max-height: 100svh; min-height: 100svh; padding: 22px 16px 36px; border: 0; border-radius: 0; }
+  .card-preview-pair { grid-template-columns: 1fr; gap: 22px; }
+  .card-sheet--back span { font-size: .58rem; }
+  .card-personal-link { grid-template-columns: 1fr; gap: 6px; }
+  .card-personal-link code { text-align: left; }
+  .card-actions { display: grid; grid-template-columns: 1fr; }
 }

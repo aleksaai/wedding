@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Check,
-  CheckCircle2,
   Clipboard,
+  CreditCard,
+  Download,
   ExternalLink,
   LogOut,
   Mail,
   Plus,
+  Printer,
   RotateCcw,
   Search,
   Send,
@@ -24,6 +26,7 @@ const categories = {
 };
 
 const approvedAdminEmails = ["info@aleksa.ai", "szildebora@gmail.com"];
+const weddingHost = "wedding.aleksa.ai";
 
 const emptyForm = {
   display_name: "",
@@ -59,6 +62,45 @@ const statusLabels = {
   declined: "Declined",
   backup: "Backup",
 };
+
+const cardLanguages = new Set(["de", "en", "hu", "sr"]);
+
+function cardAssets(language) {
+  const normalized = cardLanguages.has(language) ? language.toUpperCase() : "EN";
+  return {
+    front: `/assets/cards/${normalized}-FRONT.png`,
+    back: `/assets/cards/${normalized}-BACK.png`,
+  };
+}
+
+function openPrintableCard(invitation) {
+  const popup = window.open("", "_blank", "width=940,height=900");
+  if (!popup) return false;
+  popup.opener = null;
+  const assets = cardAssets(invitation.default_language);
+  const front = new URL(assets.front, window.location.origin).href;
+  const back = new URL(assets.back, window.location.origin).href;
+  const personalUrl = `${weddingHost}/${invitation.code}`;
+  popup.document.write(`<!doctype html>
+    <html><head><meta charset="utf-8"><title>Wedding invitation</title>
+    <style>
+      @page { size: 120mm 180mm; margin: 0; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; background: #d9d5ce; }
+      .page { position: relative; width: 120mm; height: 180mm; margin: 0 auto; overflow: hidden; page-break-after: always; background: #f8f5ee; }
+      .page:last-child { page-break-after: auto; }
+      img { display: block; width: 100%; height: 100%; object-fit: fill; }
+      .personal-link { position: absolute; left: 10mm; right: 10mm; bottom: 11mm; text-align: center; color: #182b3d; font: 600 8.5pt/1.2 "Avenir Next", Avenir, Helvetica, sans-serif; letter-spacing: .025em; }
+      @media screen { .page { margin-block: 18px; box-shadow: 0 18px 60px rgba(14,31,44,.2); } }
+      @media print { html, body { background: transparent; } .page { margin: 0; box-shadow: none; } }
+    </style></head><body>
+      <section class="page"><img src="${front}" alt="Wedding invitation front"></section>
+      <section class="page"><img src="${back}" alt="Wedding invitation back"><div class="personal-link">${personalUrl}</div></section>
+      <script>Promise.all(Array.from(document.images).map((image) => image.decode())).then(() => { window.focus(); window.print(); });<\/script>
+    </body></html>`);
+  popup.document.close();
+  return true;
+}
 
 function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -155,6 +197,7 @@ function InviteForm({ open, onClose, onSaved, invitation, defaultBackup = false 
       internal_notes: form.internal_notes.trim() || null,
       max_adults: Number(form.max_adults),
       max_children: Number(form.max_children),
+      card_generated_at: form.is_backup ? null : invitation?.card_generated_at || new Date().toISOString(),
     };
     const query = invitation
       ? supabase.from("wedding_invitations").update(payload).eq("id", invitation.id)
@@ -181,6 +224,39 @@ function InviteForm({ open, onClose, onSaved, invitation, defaultBackup = false 
           {error && <p className="form-error field-wide">{error}</p>}
           <div className="form-actions field-wide"><button type="button" className="admin-button" onClick={onClose}>Cancel</button><button className="admin-button admin-button--dark" disabled={saving}><Check size={17} />{saving ? "Saving…" : "Save invitation"}</button></div>
         </form>
+      </section>
+    </div>
+  );
+}
+
+function CardDrawer({ invitation, onClose, onGenerated, onCopyLink }) {
+  if (!invitation) return null;
+  const assets = cardAssets(invitation.default_language);
+
+  function printCard() {
+    if (openPrintableCard(invitation)) onGenerated(invitation);
+  }
+
+  return (
+    <div className="admin-modal-layer card-drawer-layer">
+      <button className="admin-modal-backdrop" onClick={onClose} aria-label="Close" />
+      <section className="card-drawer" role="dialog" aria-modal="true" aria-label={`Invitation card for ${invitation.display_name}`}>
+        <header>
+          <div><p className="admin-kicker">{invitation.default_language.toUpperCase()} · Print-ready</p><h2>{invitation.display_name}</h2><p>Final 120 × 180 mm design · 300 dpi</p></div>
+          <button className="icon-button" onClick={onClose} aria-label="Close"><X size={20} /></button>
+        </header>
+        <div className="card-preview-pair">
+          <figure><div className="card-sheet"><img src={assets.front} alt={`${invitation.default_language.toUpperCase()} invitation front`} /></div><figcaption>Front</figcaption></figure>
+          <figure><div className="card-sheet card-sheet--back"><img src={assets.back} alt={`${invitation.default_language.toUpperCase()} invitation back`} /><span>{weddingHost}/{invitation.code}</span></div><figcaption>Back · personal link</figcaption></figure>
+        </div>
+        <div className="card-personal-link"><span>Personal invitation</span><code>https://{weddingHost}/{invitation.code}</code></div>
+        <div className="card-actions">
+          <button className="admin-button admin-button--dark" onClick={printCard}><Printer size={17} />Print / save as PDF</button>
+          <button className="admin-button" onClick={() => onCopyLink(invitation.code)}><Clipboard size={16} />Copy link</button>
+          <a className="admin-button" href={assets.front} download={`${invitation.code}-${invitation.default_language.toUpperCase()}-FRONT.png`}><Download size={16} />Original front</a>
+          <a className="admin-button" href={assets.back} download={`${invitation.code}-${invitation.default_language.toUpperCase()}-BACK.png`}><Download size={16} />Original back</a>
+        </div>
+        <p className="card-note">The artwork is the approved final design. Only the personal invitation link is added in the unused lower margin of the printed back.</p>
       </section>
     </div>
   );
@@ -229,6 +305,7 @@ export function AdminApp() {
   const [editing, setEditing] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [selected, setSelected] = useState(null);
+  const [cardInvitation, setCardInvitation] = useState(null);
   const [notice, setNotice] = useState("");
   const [listView, setListView] = useState("active");
 
@@ -300,13 +377,19 @@ export function AdminApp() {
   }
 
   async function promote(invitation) {
-    const { error } = await supabase.from("wedding_invitations").update({ is_backup: false }).eq("id", invitation.id);
+    const { error } = await supabase.from("wedding_invitations").update({ is_backup: false, card_generated_at: new Date().toISOString() }).eq("id", invitation.id);
     if (error) setNotice(error.message);
     else {
       setNotice(`${invitation.display_name} moved to the guest list`);
       loadInvitations();
       window.setTimeout(() => setNotice(""), 2200);
     }
+  }
+
+  async function recordCardGenerated(invitation) {
+    if (invitation.is_backup || invitation.card_generated_at) return;
+    const { error } = await supabase.from("wedding_invitations").update({ card_generated_at: new Date().toISOString() }).eq("id", invitation.id).eq("is_backup", false);
+    if (error) setNotice(error.message); else loadInvitations();
   }
 
   if (!authReady) return <main className="route-state"><div className="route-seal">A <span>&</span> D</div></main>;
@@ -357,7 +440,7 @@ export function AdminApp() {
                     <td><span className={`group-pill ${invitation.category}`}>{categories[invitation.category].label}</span></td>
                     <td><span className="people-count">{invitation.max_adults} {invitation.max_adults === 1 ? "adult" : "adults"}{invitation.max_children ? ` · ${invitation.max_children} ${invitation.max_children === 1 ? "child" : "children"}` : ""}</span></td>
                     <td><span className={`status-pill ${inviteStatus}`}>{statusLabels[inviteStatus]}</span></td>
-                    <td>{invitation.is_backup ? <button className="promote-button" onClick={() => promote(invitation)}><Users size={15} />Move to guest list</button> : <div className="progress-actions"><button className={invitation.card_generated_at ? "done" : ""} onClick={() => mark(invitation, "card_generated_at")} title="Card ready"><CheckCircle2 size={17} /></button><button className={invitation.sent_at ? "done" : ""} onClick={() => mark(invitation, "sent_at")} title="Sent"><Send size={16} /></button><span title={`${invitation.open_count} opens`}>{invitation.open_count}</span></div>}</td>
+                    <td>{invitation.is_backup ? <button className="promote-button" onClick={() => promote(invitation)}><Users size={15} />Move to guest list</button> : <div className="progress-actions"><button className={invitation.card_generated_at ? "done" : ""} onClick={() => setCardInvitation(invitation)} title="Open invitation card"><CreditCard size={17} /></button><button className={invitation.sent_at ? "done" : ""} onClick={() => mark(invitation, "sent_at")} title="Sent"><Send size={16} /></button><span title={`${invitation.open_count} opens`}>{invitation.open_count}</span></div>}</td>
                     <td>{invitation.is_backup ? <span className="not-invited">Not invited</span> : <button className="copy-button" onClick={() => copyLink(invitation.code)}><Clipboard size={15} />Copy</button>}</td>
                   </tr>;
                 })}
@@ -369,6 +452,7 @@ export function AdminApp() {
       {notice && <div className="admin-toast">{notice}</div>}
       <InviteForm open={formOpen} invitation={editing} defaultBackup={listView === "backup"} onClose={() => setFormOpen(false)} onSaved={() => { setFormOpen(false); loadInvitations(); }} />
       <ResponseDrawer invitation={selected} onClose={() => setSelected(null)} />
+      <CardDrawer invitation={cardInvitation} onClose={() => setCardInvitation(null)} onGenerated={recordCardGenerated} onCopyLink={copyLink} />
     </main>
   );
 }
