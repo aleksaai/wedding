@@ -22,6 +22,8 @@ const categories = {
   common: { label: "Common friends", language: "en" },
 };
 
+const approvedAdminEmails = ["info@aleksa.ai", "szildebora@gmail.com"];
+
 const emptyForm = {
   display_name: "",
   category: "common",
@@ -61,10 +63,19 @@ function LoginScreen() {
 
   async function signIn(event) {
     event.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!approvedAdminEmails.includes(normalizedEmail)) {
+      setState("error");
+      setMessage("This email address is not approved for the wedding workspace.");
+      return;
+    }
     setState("loading");
     const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim().toLowerCase(),
-      options: { emailRedirectTo: `${window.location.origin}/admin` },
+      email: normalizedEmail,
+      options: {
+        emailRedirectTo: `${window.location.origin}/admin`,
+        shouldCreateUser: false,
+      },
     });
     setState(error ? "error" : "sent");
     setMessage(error ? error.message : "Magic link sent. Check your inbox.");
@@ -83,6 +94,20 @@ function LoginScreen() {
         </form>
         {message && <p className={`login-message ${state}`}>{message}</p>}
         <a href="/">← Back to wedding website</a>
+      </section>
+    </main>
+  );
+}
+
+function AccessDenied({ email }) {
+  return (
+    <main className="admin-login">
+      <section className="login-card access-denied-card">
+        <p className="admin-mark">A <span>&</span> D</p>
+        <p className="admin-kicker">Private workspace</p>
+        <h1>No access</h1>
+        <p><strong>{email}</strong> is signed in, but is not approved to view the wedding guest list.</p>
+        <button className="admin-button admin-button--dark" onClick={() => supabase.auth.signOut()}><LogOut size={17} />Sign out and use another email</button>
       </section>
     </main>
   );
@@ -188,6 +213,7 @@ function ResponseDrawer({ invitation, onClose }) {
 export function AdminApp() {
   const [session, setSession] = useState(null);
   const [authReady, setAuthReady] = useState(false);
+  const [access, setAccess] = useState("checking");
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -215,7 +241,22 @@ export function AdminApp() {
     setLoading(false);
   }
 
-  useEffect(() => { if (session) loadInvitations(); }, [session]);
+  useEffect(() => {
+    if (!session) {
+      setAccess("checking");
+      return;
+    }
+    let active = true;
+    supabase.rpc("is_wedding_admin").then(({ data, error }) => {
+      if (!active) return;
+      if (error || data !== true) setAccess("denied");
+      else {
+        setAccess("allowed");
+        loadInvitations();
+      }
+    });
+    return () => { active = false; };
+  }, [session]);
 
   const filtered = useMemo(() => invitations.filter((invitation) => {
     const query = search.trim().toLowerCase();
@@ -245,6 +286,8 @@ export function AdminApp() {
 
   if (!authReady) return <main className="route-state"><div className="route-seal">A <span>&</span> D</div></main>;
   if (!session) return <LoginScreen />;
+  if (access === "checking") return <main className="route-state"><div className="route-seal">A <span>&</span> D</div><p>Checking access…</p></main>;
+  if (access === "denied") return <AccessDenied email={session.user.email} />;
 
   return (
     <main className="admin-shell">
@@ -252,7 +295,7 @@ export function AdminApp() {
         <a href="/" className="admin-mark">A <span>&</span> D</a>
         <div><p className="admin-kicker">Wedding workspace</p><h2>23 Jan 2027</h2></div>
         <nav><a className="is-active" href="#guests"><Users size={18} />Guest list</a></nav>
-        <button className="admin-signout" onClick={() => supabase.auth.signOut()}><LogOut size={17} />Sign out</button>
+        <button className="admin-signout" onClick={() => supabase.auth.signOut()} title={session.user.email}><LogOut size={17} />Sign out</button>
       </aside>
       <section className="admin-main" id="guests">
         <header className="admin-header"><div><p className="admin-kicker">Aleksa & Debora</p><h1>Guest list</h1><p>One invitation, one private link, one clear response.</p></div><button className="admin-button admin-button--dark" onClick={() => { setEditing(null); setFormOpen(true); }}><Plus size={18} />Add invitation</button></header>

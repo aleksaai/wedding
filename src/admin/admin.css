@@ -102,6 +102,8 @@
 .login-card > a { color: var(--admin-muted); font-size: .82rem; text-underline-offset: 4px; }
 .login-message.sent { color: #39714d !important; }
 .login-message.error { color: #963e39 !important; }
+.access-denied-card strong { color: var(--admin-ink); overflow-wrap: anywhere; }
+.access-denied-card .admin-button { width: 100%; margin: 18px 0 8px; }
 
 @media (max-width: 900px) {
   .admin-shell { display: block; }
@@ -128,4 +130,3 @@
   .field-wide { grid-column: auto; }
   .response-drawer { padding: 26px 20px; }
 }
-
