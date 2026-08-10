@@ -54,7 +54,7 @@ export const translations = {
       respond: "Antwort geben",
     },
     scene: {
-      imageAlt: "Verschneite Fischerbastei mit Blick über das winterliche Budapest",
+      imageAlt: "Fischerbastei und Matthiaskirche unter blauem Budapester Himmel",
       eyebrow: "Zwischen Donau, Lichtern und Schnee",
       title: ["Budapest", "im Winter"],
     },
@@ -164,7 +164,7 @@ export const translations = {
       respond: "Visszajelzek",
     },
     scene: {
-      imageAlt: "A havas Halászbástya kilátással a téli Budapestre",
+      imageAlt: "A Halászbástya és a Mátyás-templom a kék budapesti ég alatt",
       eyebrow: "A Duna, a fények és a hó között",
       title: ["Budapest", "télen"],
     },
@@ -274,7 +274,7 @@ export const translations = {
       respond: "Pošaljite odgovor",
     },
     scene: {
-      imageAlt: "Snežna Ribarska tvrđava sa pogledom na zimsku Budimpeštu",
+      imageAlt: "Ribarska tvrđava i Matijina crkva pod plavim budimpeštanskim nebom",
       eyebrow: "Između Dunava, svetala i snega",
       title: ["Budimpešta", "zimi"],
     },
@@ -384,7 +384,7 @@ export const translations = {
       respond: "Send your reply",
     },
     scene: {
-      imageAlt: "Snow-covered Fisherman’s Bastion overlooking wintertime Budapest",
+      imageAlt: "Fisherman’s Bastion and Matthias Church beneath a blue Budapest sky",
       eyebrow: "Between the Danube, lights and snow",
       title: ["Budapest", "in winter"],
     },
