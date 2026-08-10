@@ -16,10 +16,11 @@ import {
   X,
 } from "lucide-react";
 import { eventDetails, languageOptions, translations } from "./i18n.js";
+import { supabase } from "./lib/supabase.js";
 
-function getInitialLanguage() {
+function getInitialLanguage(fallback = "de") {
   const requested = new URLSearchParams(window.location.search).get("lang");
-  return translations[requested] ? requested : "de";
+  return translations[requested] ? requested : fallback;
 }
 
 function Ornament({ compact = false }) {
@@ -83,7 +84,7 @@ function ChoiceCard({ selected, onClick, icon, title, text }) {
   );
 }
 
-function Counter({ label, hint, value, onChange, decreaseLabel, increaseLabel }) {
+function Counter({ label, hint, value, max, onChange, decreaseLabel, increaseLabel }) {
   return (
     <div className="counter-row">
       <div>
@@ -95,7 +96,7 @@ function Counter({ label, hint, value, onChange, decreaseLabel, increaseLabel })
           <Minus size={16} />
         </button>
         <span>{value}</span>
-        <button type="button" onClick={() => onChange(value + 1)} aria-label={increaseLabel}>
+        <button type="button" onClick={() => onChange(value + 1)} disabled={value >= max} aria-label={increaseLabel}>
           <Plus size={16} />
         </button>
       </div>
@@ -115,7 +116,7 @@ function LanguageSelect({ language, onChange, copy }) {
   );
 }
 
-function RsvpSheet({ open, onClose, copy }) {
+function RsvpSheet({ open, onClose, copy, invitation }) {
   const text = copy.rsvp;
   const [step, setStep] = useState(0);
   const [attendance, setAttendance] = useState("");
@@ -123,6 +124,17 @@ function RsvpSheet({ open, onClose, copy }) {
   const [children, setChildren] = useState(0);
   const [diet, setDiet] = useState("");
   const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  useEffect(() => {
+    if (!open || !invitation?.response) return;
+    setAttendance(invitation.response.attending ? "yes" : "no");
+    setPartner(invitation.response.partner_count || 0);
+    setChildren(invitation.response.children_count || 0);
+    setDiet(invitation.response.dietary_notes || "");
+    setMessage(invitation.response.message || "");
+  }, [open, invitation]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -145,6 +157,26 @@ function RsvpSheet({ open, onClose, copy }) {
   function resetAndClose() {
     onClose();
     window.setTimeout(() => setStep(0), 350);
+  }
+
+  async function submit() {
+    setSubmitError("");
+    if (!invitation?.code) {
+      setSubmitError(text.personalLinkRequired);
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.rpc("submit_wedding_rsvp", {
+      p_code: invitation.code,
+      p_attending: attendance === "yes",
+      p_partner_count: partner,
+      p_children_count: children,
+      p_dietary_notes: diet,
+      p_message: message,
+    });
+    setSubmitting(false);
+    if (error) setSubmitError(text.saveError);
+    else setStep(3);
   }
 
   return (
@@ -190,8 +222,8 @@ function RsvpSheet({ open, onClose, copy }) {
                       <h3>{text.companionsTitle}</h3>
                       <p className="sheet-copy">{text.companionsCopy}</p>
                       <div className="counter-list">
-                        <Counter label={text.partner} hint={text.partnerHint} value={partner} onChange={(value) => setPartner(Math.min(value, 1))} decreaseLabel={text.decrease(text.partner)} increaseLabel={text.increase(text.partner)} />
-                        <Counter label={text.children} hint={text.childrenHint} value={children} onChange={(value) => setChildren(Math.min(value, 4))} decreaseLabel={text.decrease(text.children)} increaseLabel={text.increase(text.children)} />
+                        <Counter label={text.partner} hint={text.partnerHint} value={partner} max={Math.max((invitation?.max_adults || 1) - 1, 0)} onChange={setPartner} decreaseLabel={text.decrease(text.partner)} increaseLabel={text.increase(text.partner)} />
+                        <Counter label={text.children} hint={text.childrenHint} value={children} max={invitation?.max_children || 0} onChange={setChildren} decreaseLabel={text.decrease(text.children)} increaseLabel={text.increase(text.children)} />
                       </div>
                     </>
                   )}
@@ -227,9 +259,10 @@ function RsvpSheet({ open, onClose, copy }) {
             </div>
 
             <div className="sheet-actions">
+              {submitError && <p className="rsvp-error">{submitError}</p>}
               {step > 0 && step < 3 && <button type="button" className="button button--ghost" onClick={back}><ArrowLeft size={17} /> {text.back}</button>}
               {step < 2 && <button type="button" className="button button--primary" disabled={nextDisabled} onClick={next}>{text.next} <ArrowRight size={17} /></button>}
-              {step === 2 && <button type="button" className="button button--primary" onClick={() => setStep(3)}>{text.send} <ArrowRight size={17} /></button>}
+              {step === 2 && <button type="button" className="button button--primary" disabled={submitting} onClick={submit}>{submitting ? text.sending : text.send} <ArrowRight size={17} /></button>}
               {step === 3 && <button type="button" className="button button--primary" onClick={resetAndClose}>{text.return}</button>}
             </div>
           </motion.section>
@@ -239,8 +272,8 @@ function RsvpSheet({ open, onClose, copy }) {
   );
 }
 
-export function App() {
-  const [language, setLanguage] = useState(getInitialLanguage);
+export function App({ invitation = null }) {
+  const [language, setLanguage] = useState(() => getInitialLanguage(invitation?.default_language || "de"));
   const [rsvpOpen, setRsvpOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
   const [scrolled, setScrolled] = useState(false);
@@ -277,7 +310,7 @@ export function App() {
         </picture>
         <div className="hero-vignette" />
         <div className="hero-bottom">
-          <p>{copy.hero.personal}</p>
+          <p>{invitation?.display_name || copy.hero.personal}</p>
           <button type="button" className="button button--light" onClick={() => setRsvpOpen(true)}>{copy.hero.respond} <ArrowRight size={17} /></button>
           <a href="#welcome" className="scroll-cue">{copy.hero.discover} <ArrowDown size={16} /></a>
         </div>
@@ -373,7 +406,7 @@ export function App() {
         </div>
       </footer>
 
-      <RsvpSheet open={rsvpOpen} onClose={() => setRsvpOpen(false)} copy={copy} />
+      <RsvpSheet open={rsvpOpen} onClose={() => setRsvpOpen(false)} copy={copy} invitation={invitation} />
     </main>
   );
 }
