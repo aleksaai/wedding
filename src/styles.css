@@ -305,18 +305,7 @@ main { overflow: clip; }
 .scene-section {
   position: relative;
   padding: 38px 20px 76px;
-  isolation: isolate;
   overflow: hidden;
-}
-.scene-section::before {
-  content: "";
-  position: absolute;
-  inset: -42px;
-  z-index: -1;
-  background: url("/assets/wedding-budapest-photo.webp") 50% 58% / cover no-repeat;
-  filter: blur(42px) saturate(0.82);
-  opacity: 0.22;
-  transform: scale(1.08);
 }
 .scene-card {
   position: relative;
@@ -329,6 +318,19 @@ main { overflow: clip; }
   box-shadow: 0 28px 72px rgba(30, 51, 64, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.68);
   -webkit-backdrop-filter: blur(22px) saturate(1.15);
   backdrop-filter: blur(22px) saturate(1.15);
+  isolation: isolate;
+  overflow: hidden;
+}
+.scene-card::before {
+  content: "";
+  position: absolute;
+  inset: -24px;
+  z-index: -1;
+  border-radius: inherit;
+  background: url("/assets/wedding-budapest-photo.webp") 50% 60% / cover no-repeat;
+  filter: blur(22px) saturate(0.9);
+  opacity: 0.38;
+  transform: scale(1.06);
 }
 .scene-card img {
   display: block;
