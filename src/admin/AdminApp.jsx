@@ -64,6 +64,9 @@ const statusLabels = {
 };
 
 const cardLanguages = new Set(["de", "en", "hu", "sr"]);
+// Update this fingerprint whenever the approved front artwork changes so
+// already-open admin sessions cannot reuse a stale browser/CDN image cache.
+const cardFrontArtworkVersion = "cd53b6c5d976";
 const cardCodeLabels = {
   de: "Einladungscode",
   en: "Invitation code",
@@ -74,7 +77,7 @@ const cardCodeLabels = {
 function cardAssets(language) {
   const normalized = cardLanguages.has(language) ? language.toUpperCase() : "EN";
   return {
-    front: `/assets/cards/${normalized}-FRONT.png`,
+    front: `/assets/cards/${normalized}-FRONT.png?v=${cardFrontArtworkVersion}`,
     back: `/assets/cards/${normalized}-BACK.png`,
   };
 }
