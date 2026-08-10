@@ -418,6 +418,17 @@ footer > p:nth-child(2) { margin: 0; color: #778087; font: italic 400 13px/1 var
 .field-label span { color: #959a9b; font-weight: 400; }
 .field-label input, .field-label textarea { width: 100%; margin-top: 8px; border: 1px solid var(--line); border-radius: 7px; outline: none; padding: 14px 15px; color: var(--navy); background: rgba(255, 255, 255, 0.45); font-size: 13px; resize: none; }
 .field-label input:focus, .field-label textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(170, 139, 91, 0.1); }
+.invitation-code-field { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line); }
+.invitation-code-field input {
+  color: var(--navy);
+  border-color: var(--gold-light);
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.invitation-code-field small { display: block; margin-top: 8px; color: #778187; font-size: 9px; font-weight: 400; letter-spacing: 0; line-height: 1.5; }
 .sheet-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; flex: 0 0 auto; padding: 14px 20px max(17px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: rgba(251, 247, 238, 0.96); }
 .sheet-actions .button { flex: 1; padding-inline: 16px; }
 .rsvp-error { width: 100%; margin: 0 0 3px; color: #943f39; font-size: 11px; line-height: 1.45; text-align: center; }

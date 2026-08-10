@@ -124,6 +124,7 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
   const [children, setChildren] = useState(0);
   const [diet, setDiet] = useState("");
   const [message, setMessage] = useState("");
+  const [manualCode, setManualCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -161,13 +162,34 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
 
   async function submit() {
     setSubmitError("");
-    if (!invitation?.code) {
-      setSubmitError(text.personalLinkRequired);
-      return;
+    let invitationCode = invitation?.code;
+
+    if (!invitationCode) {
+      invitationCode = manualCode.trim().toUpperCase();
+      if (!/^[A-Z0-9]{6,12}$/.test(invitationCode)) {
+        setSubmitError(text.codeRequired);
+        return;
+      }
+
+      setSubmitting(true);
+      const { data: matchedInvitation, error: lookupError } = await supabase.rpc("open_wedding_invitation", {
+        p_code: invitationCode,
+      });
+      if (lookupError || !matchedInvitation) {
+        setSubmitting(false);
+        setSubmitError(text.codeNotFound);
+        return;
+      }
+      if (partner > Math.max(matchedInvitation.max_adults - 1, 0) || children > matchedInvitation.max_children) {
+        setSubmitting(false);
+        setSubmitError(text.allowanceError);
+        return;
+      }
     }
+
     setSubmitting(true);
     const { error } = await supabase.rpc("submit_wedding_rsvp", {
-      p_code: invitation.code,
+      p_code: invitationCode,
       p_attending: attendance === "yes",
       p_partner_count: partner,
       p_children_count: children,
@@ -222,8 +244,8 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
                       <h3>{text.companionsTitle}</h3>
                       <p className="sheet-copy">{text.companionsCopy}</p>
                       <div className="counter-list">
-                        <Counter label={text.partner} hint={text.partnerHint} value={partner} max={Math.max((invitation?.max_adults || 1) - 1, 0)} onChange={setPartner} decreaseLabel={text.decrease(text.partner)} increaseLabel={text.increase(text.partner)} />
-                        <Counter label={text.children} hint={text.childrenHint} value={children} max={invitation?.max_children || 0} onChange={setChildren} decreaseLabel={text.decrease(text.children)} increaseLabel={text.increase(text.children)} />
+                        <Counter label={text.partner} hint={text.partnerHint} value={partner} max={invitation ? Math.max(invitation.max_adults - 1, 0) : 11} onChange={setPartner} decreaseLabel={text.decrease(text.partner)} increaseLabel={text.increase(text.partner)} />
+                        <Counter label={text.children} hint={text.childrenHint} value={children} max={invitation ? invitation.max_children : 12} onChange={setChildren} decreaseLabel={text.decrease(text.children)} increaseLabel={text.increase(text.children)} />
                       </div>
                     </>
                   )}
@@ -243,6 +265,25 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
                         {text.message} <span>{text.optional}</span>
                         <textarea value={message} onChange={(event) => setMessage(event.target.value)} placeholder={text.messagePlaceholder} rows={3} />
                       </label>
+                      {!invitation && (
+                        <label className="field-label invitation-code-field">
+                          {text.codeLabel}
+                          <input
+                            value={manualCode}
+                            onChange={(event) => {
+                              setManualCode(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""));
+                              setSubmitError("");
+                            }}
+                            placeholder={text.codePlaceholder}
+                            maxLength={12}
+                            autoCapitalize="characters"
+                            autoComplete="off"
+                            spellCheck="false"
+                            aria-describedby="invitation-code-hint"
+                          />
+                          <small id="invitation-code-hint">{text.codeHint}</small>
+                        </label>
+                      )}
                     </>
                   )}
 
@@ -262,7 +303,7 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
               {submitError && <p className="rsvp-error">{submitError}</p>}
               {step > 0 && step < 3 && <button type="button" className="button button--ghost" onClick={back}><ArrowLeft size={17} /> {text.back}</button>}
               {step < 2 && <button type="button" className="button button--primary" disabled={nextDisabled} onClick={next}>{text.next} <ArrowRight size={17} /></button>}
-              {step === 2 && <button type="button" className="button button--primary" disabled={submitting} onClick={submit}>{submitting ? text.sending : text.send} <ArrowRight size={17} /></button>}
+              {step === 2 && <button type="button" className="button button--primary" disabled={submitting || (!invitation && !/^[A-Z0-9]{6,12}$/.test(manualCode))} onClick={submit}>{submitting ? text.sending : text.send} <ArrowRight size={17} /></button>}
               {step === 3 && <button type="button" className="button button--primary" onClick={resetAndClose}>{text.return}</button>}
             </div>
           </motion.section>
