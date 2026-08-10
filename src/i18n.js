@@ -12,7 +12,7 @@ export const translations = {
     nav: { home: "Zum Anfang", language: "Sprache wählen", rsvp: "RSVP" },
     wedding: {
       couple: "Aleksa & Debóra",
-      date: "Winter 2026",
+      date: "23.01.2027",
       city: "Budapest, Ungarn",
       venue: "Budapest · genauer Ort folgt",
       responseDeadline: "Bitte antwortet bis zum 1. November 2026",
@@ -32,9 +32,9 @@ export const translations = {
     details: {
       eyebrow: "Save the date",
       title: ["Ein Wintertag", "in Budapest"],
-      intro: "Die letzten Details folgen bald – aber diesen Zeitraum darfst du dir schon jetzt im Herzen und Kalender freihalten.",
+      intro: "Der Termin steht – diesen besonderen Wintertag darfst du dir schon jetzt im Herzen und Kalender freihalten.",
       when: "Wann",
-      exactDate: "Das genaue Datum folgt",
+      exactDate: "Samstag · 23. Januar 2027",
       where: "Wo",
       respond: "Antwort geben",
     },
@@ -119,7 +119,7 @@ export const translations = {
     nav: { home: "Vissza az elejére", language: "Nyelvválasztás", rsvp: "VÁLASZ" },
     wedding: {
       couple: "Aleksa & Debóra",
-      date: "2026 tele",
+      date: "2027.01.23.",
       city: "Budapest, Magyarország",
       venue: "Budapest · a pontos helyszín hamarosan",
       responseDeadline: "Kérjük, válaszolj 2026. november 1-ig",
@@ -139,9 +139,9 @@ export const translations = {
     details: {
       eyebrow: "Jegyezd fel a dátumot",
       title: ["Egy téli nap", "Budapesten"],
-      intro: "A részletek hamarosan érkeznek – ezt az időszakot azonban már most érdemes szabaddá tenned a szívedben és a naptáradban.",
+      intro: "A dátum már biztos – ezt a különleges téli napot már most tartsd szabadon a szívedben és a naptáradban.",
       when: "Mikor",
-      exactDate: "A pontos dátum hamarosan",
+      exactDate: "Szombat · 2027. január 23.",
       where: "Hol",
       respond: "Visszajelzek",
     },
@@ -226,7 +226,7 @@ export const translations = {
     nav: { home: "Nazad na početak", language: "Izaberi jezik", rsvp: "ODGOVOR" },
     wedding: {
       couple: "Aleksa & Debóra",
-      date: "Zima 2026.",
+      date: "23.01.2027.",
       city: "Budimpešta, Mađarska",
       venue: "Budimpešta · tačna lokacija uskoro",
       responseDeadline: "Molimo vas da odgovorite do 1. novembra 2026.",
@@ -246,9 +246,9 @@ export const translations = {
     details: {
       eyebrow: "Sačuvajte datum",
       title: ["Jedan zimski dan", "u Budimpešti"],
-      intro: "Poslednji detalji stižu uskoro – ali ovaj period već sada možete sačuvati u srcu i kalendaru.",
+      intro: "Datum je potvrđen – sačuvajte ovaj poseban zimski dan već sada u srcu i kalendaru.",
       when: "Kada",
-      exactDate: "Tačan datum uskoro",
+      exactDate: "Subota · 23. januar 2027.",
       where: "Gde",
       respond: "Pošaljite odgovor",
     },
@@ -333,7 +333,7 @@ export const translations = {
     nav: { home: "Back to the beginning", language: "Choose language", rsvp: "RSVP" },
     wedding: {
       couple: "Aleksa & Debóra",
-      date: "Winter 2026",
+      date: "23.01.2027",
       city: "Budapest, Hungary",
       venue: "Budapest · exact venue to follow",
       responseDeadline: "Please reply by 1 November 2026",
@@ -353,9 +353,9 @@ export const translations = {
     details: {
       eyebrow: "Save the date",
       title: ["A winter day", "in Budapest"],
-      intro: "The final details will follow soon – but you can already keep this time free in your heart and your calendar.",
+      intro: "The date is set – you can already keep this special winter day free in your heart and your calendar.",
       when: "When",
-      exactDate: "Exact date to follow",
+      exactDate: "Saturday · 23 January 2027",
       where: "Where",
       respond: "Send your reply",
     },
