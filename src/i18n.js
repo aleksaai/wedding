@@ -32,7 +32,7 @@ export const translations = {
       reference: "1. Korinther 13,4",
     },
     hero: {
-      imageAlt: "Illustrierte Hochzeitseinladung von Aleksa und Debóra vor der winterlichen Skyline Budapests",
+      imageAlt: "Aleksa und Debóra an einem verschneiten Abend vor den Lichtern Budapests",
       personal: "Deine persönliche Einladung",
       respond: "Zu- oder absagen",
       discover: "Einladung entdecken",
@@ -154,7 +154,7 @@ export const translations = {
       reference: "1 Korinthus 13:4",
     },
     hero: {
-      imageAlt: "Aleksa és Debóra illusztrált esküvői meghívója a téli Budapest látképével",
+      imageAlt: "Aleksa és Debóra egy havas estén Budapest fényei előtt",
       personal: "Személyes meghívód",
       respond: "Visszajelzek",
       discover: "Fedezd fel a meghívót",
@@ -276,7 +276,7 @@ export const translations = {
       reference: "1. Korinćanima 13:4",
     },
     hero: {
-      imageAlt: "Ilustrovana pozivnica za venčanje Alekse i Debóre ispred zimske Budimpešte",
+      imageAlt: "Aleksa i Debóra tokom snežne večeri pred svetlima Budimpešte",
       personal: "Vaša lična pozivnica",
       respond: "Potvrdite dolazak",
       discover: "Otkrijte pozivnicu",
@@ -398,7 +398,7 @@ export const translations = {
       reference: "1 Corinthians 13:4",
     },
     hero: {
-      imageAlt: "Illustrated wedding invitation for Aleksa and Debóra in front of wintertime Budapest",
+      imageAlt: "Aleksa and Debóra on a snowy evening before the lights of Budapest",
       personal: "Your personal invitation",
       respond: "Accept or decline",
       discover: "Discover the invitation",

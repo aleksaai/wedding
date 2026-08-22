@@ -1,15 +1,15 @@
 @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Manrope:wght@400;500;600&display=swap");
 
 :root {
-  --ivory: #f5efe3;
-  --paper: #fbf7ee;
-  --paper-deep: #ece3d5;
-  --navy: #172b3d;
-  --navy-soft: #2c4050;
-  --gold: #aa8b5b;
-  --gold-light: #cbb68d;
-  --mist: #afbdc5;
-  --line: rgba(123, 104, 75, 0.25);
+  --ivory: #f2e8d8;
+  --paper: #f8f2e8;
+  --paper-deep: #e9decc;
+  --navy: #07172f;
+  --navy-soft: #1c3048;
+  --gold: #c49a50;
+  --gold-light: #ddc284;
+  --mist: #9cacb8;
+  --line: rgba(151, 117, 58, 0.24);
   --serif: "Cormorant Garamond", Georgia, serif;
   --sans: "Manrope", system-ui, sans-serif;
 }
@@ -48,12 +48,12 @@ main { overflow: clip; }
   justify-content: space-between;
   height: 68px;
   padding: 0 20px;
-  color: var(--navy);
+  color: #fff5e4;
   transition: background 250ms ease, color 250ms ease, box-shadow 250ms ease;
 }
 .topbar.is-scrolled {
   color: var(--navy);
-  background: rgba(251, 247, 238, 0.91);
+  background: rgba(248, 242, 232, 0.92);
   box-shadow: 0 1px 0 rgba(30, 45, 56, 0.08);
   backdrop-filter: blur(12px);
 }
@@ -78,7 +78,10 @@ main { overflow: clip; }
   border-radius: 999px;
   padding: 0 8px;
   color: inherit;
-  background: transparent;
+  border-color: rgba(255, 245, 228, 0.72);
+  background: rgba(5, 18, 38, 0.24);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 .language-select select {
   width: 25px;
@@ -96,13 +99,21 @@ main { overflow: clip; }
 .nav-rsvp {
   border: 1px solid currentColor;
   border-radius: 999px;
-  background: transparent;
+  border-color: rgba(255, 245, 228, 0.72);
+  background: rgba(5, 18, 38, 0.24);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   padding: 9px 15px;
   color: inherit;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.19em;
   cursor: pointer;
+}
+.topbar.is-scrolled .language-select,
+.topbar.is-scrolled .nav-rsvp {
+  border-color: currentColor;
+  background: rgba(255, 255, 255, 0.34);
 }
 
 @media (max-width: 350px) {
@@ -115,7 +126,7 @@ main { overflow: clip; }
 .hero {
   position: relative;
   min-height: 100svh;
-  background: #d6d2c9;
+  background: #06152c;
   isolation: isolate;
 }
 .hero::before {
@@ -123,7 +134,7 @@ main { overflow: clip; }
   position: absolute;
   inset: -24px;
   z-index: -4;
-  background: url("/assets/wedding-hero-desktop.webp") center / cover no-repeat;
+  background: url("/assets/wedding-hero-night-desktop-v1.webp") center / cover no-repeat;
   filter: blur(18px);
   opacity: 0;
 }
@@ -137,17 +148,13 @@ main { overflow: clip; }
   height: 100%;
   object-fit: cover;
   object-position: 50% 50%;
+  animation: hero-reveal 1.35s cubic-bezier(.2,.65,.25,1) both;
 }
 .hero-vignette {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 31%;
+  inset: 0;
   z-index: -2;
-  background: rgba(17, 35, 50, 0.72);
-  filter: blur(34px);
-  transform: translateY(25%);
+  background: linear-gradient(180deg, rgba(3, 13, 29, 0.56) 0%, rgba(3, 13, 29, 0.08) 24%, rgba(3, 13, 29, 0.05) 53%, rgba(3, 13, 29, 0.92) 100%);
 }
 .hero-bottom {
   position: absolute;
@@ -158,12 +165,14 @@ main { overflow: clip; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 52px 24px 24px;
+  padding: 52px 24px max(24px, env(safe-area-inset-bottom));
   color: white;
   text-align: center;
+  animation: hero-content 900ms 260ms cubic-bezier(.2,.65,.25,1) both;
 }
 .hero-bottom > p {
   margin: 0 0 13px;
+  color: #f5dfba;
   font: italic 500 18px/1.3 var(--serif);
   letter-spacing: 0.04em;
 }
@@ -182,6 +191,8 @@ main { overflow: clip; }
 .scroll-cue svg { animation: float 1.7s ease-in-out infinite; }
 
 @keyframes float { 50% { transform: translateY(4px); } }
+@keyframes hero-reveal { from { opacity: 0; transform: scale(1.025); } to { opacity: 1; transform: scale(1); } }
+@keyframes hero-content { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
 .button {
   min-height: 50px;
@@ -200,7 +211,7 @@ main { overflow: clip; }
 }
 .button:active { transform: scale(0.98); }
 .button:disabled { opacity: 0.38; cursor: not-allowed; }
-.button--light { color: var(--navy); background: var(--paper); box-shadow: 0 9px 34px rgba(8, 20, 29, 0.24); }
+.button--light { color: var(--navy); border: 1px solid rgba(221, 194, 132, 0.72); background: #fff7e9; box-shadow: 0 9px 34px rgba(3, 12, 27, 0.3); }
 .button--primary { color: white; background: var(--navy); }
 .button--outline { color: var(--navy); border: 1px solid var(--gold-light); background: transparent; }
 .button--ghost { color: var(--navy); background: rgba(23, 43, 61, 0.06); }
@@ -226,8 +237,12 @@ main { overflow: clip; }
 
 .welcome {
   padding: 83px 24px 90px;
+  color: #fff5e4;
+  border-top: 1px solid rgba(221, 194, 132, 0.34);
+  background: radial-gradient(circle at 50% 0%, rgba(196, 154, 80, 0.14), transparent 38%), linear-gradient(180deg, #07172f 0%, #0a1d37 100%);
   text-align: center;
 }
+.welcome .eyebrow { color: var(--gold-light); }
 .welcome h2 {
   max-width: 820px;
   margin: 0 auto;
@@ -237,12 +252,12 @@ main { overflow: clip; }
 .welcome-copy {
   max-width: 480px;
   margin: 27px auto 0;
-  color: var(--navy-soft);
+  color: rgba(255, 245, 228, 0.76);
   font: italic 400 22px/1.5 var(--serif);
 }
 .signature {
   margin-top: 36px;
-  color: var(--navy);
+  color: #fff5e4;
   font: italic 500 22px/1 var(--serif);
   letter-spacing: 0.12em;
 }
@@ -311,33 +326,24 @@ main { overflow: clip; }
   position: relative;
   width: min(100%, 1120px);
   margin: 0 auto;
-  padding: 9px;
-  border: 1px solid rgba(255, 255, 255, 0.62);
-  border-radius: 25px;
-  background: rgba(255, 255, 255, 0.24);
-  box-shadow: 0 28px 72px rgba(30, 51, 64, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.68);
-  -webkit-backdrop-filter: blur(22px) saturate(1.15);
-  backdrop-filter: blur(22px) saturate(1.15);
+  padding: 8px;
+  border: 1px solid rgba(196, 154, 80, 0.52);
+  border-radius: 20px;
+  background: #0a1b33;
+  box-shadow: 0 28px 72px rgba(7, 23, 47, 0.24), inset 0 1px 0 rgba(255, 245, 228, 0.14);
   isolation: isolate;
   overflow: hidden;
 }
 .scene-card::before {
-  content: "";
-  position: absolute;
-  inset: -24px;
-  z-index: -1;
-  border-radius: inherit;
-  background: url("/assets/wedding-budapest-photo.webp") 50% 60% / cover no-repeat;
-  filter: blur(22px) saturate(0.9);
-  opacity: 0.38;
-  transform: scale(1.06);
+  display: none;
 }
 .scene-card img {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 17px;
+  border: 1px solid rgba(221, 194, 132, 0.26);
+  border-radius: 13px;
+  filter: saturate(0.78) contrast(0.96) brightness(0.92);
   object-fit: cover;
   object-position: 50% 60%;
 }
@@ -364,7 +370,7 @@ main { overflow: clip; }
 .faq-answer { overflow: hidden; }
 .faq-answer p { margin: -5px 32px 22px 2px; color: #66737b; font-size: 12px; line-height: 1.7; }
 
-.finale { position: relative; padding: 96px 22px 98px; color: white; background: var(--navy); text-align: center; overflow: hidden; }
+.finale { position: relative; padding: 96px 22px 98px; color: white; background: radial-gradient(circle at 50% 100%, rgba(196, 154, 80, 0.16), transparent 42%), var(--navy); text-align: center; overflow: hidden; }
 .finale-inner { position: relative; z-index: 1; max-width: 520px; margin: auto; }
 .verse { margin: 0; color: #f3eadc; font: italic 400 23px/1.35 var(--serif); }
 .reference { margin: 11px 0 47px; color: var(--gold-light); font-size: 8px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; }
@@ -442,7 +448,7 @@ footer > p:nth-child(2) { margin: 0; color: #778087; font: italic 400 13px/1 var
   .hero { min-height: 100svh; height: 100svh; max-height: none; }
   .hero::before { display: none; }
   .hero-picture { width: 100%; left: 0; right: 0; transform: none; box-shadow: none; }
-  .hero-picture img { object-fit: cover; object-position: 50% 20%; }
+  .hero-picture img { object-fit: cover; object-position: 50% 50%; }
   .hero-bottom { padding-bottom: 30px; }
   .welcome { padding-block: 120px; }
   .details-section, .schedule-section, .practical-section { padding-block: 120px; }
@@ -458,8 +464,8 @@ footer > p:nth-child(2) { margin: 0; color: #778087; font: italic 400 13px/1 var
 @media (min-width: 1050px) {
   .hero { min-height: 800px; }
   .scene-section { padding: 54px 48px 108px; }
-  .scene-card { padding: 13px; border-radius: 32px; }
-  .scene-card img { border-radius: 21px; }
+  .scene-card { padding: 11px; border-radius: 24px; }
+  .scene-card img { border-radius: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

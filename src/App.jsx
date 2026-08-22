@@ -363,8 +363,8 @@ export function App({ invitation = null }) {
 
       <section className="hero" id="top">
         <picture className="hero-picture">
-          <source media="(min-width: 700px)" srcSet="/assets/wedding-hero-desktop.webp" />
-          <img src="/assets/wedding-hero-mobile.webp" alt={copy.hero.imageAlt} />
+          <source media="(min-width: 700px)" srcSet="/assets/wedding-hero-night-desktop-v1.webp" />
+          <img src="/assets/wedding-hero-night-mobile-v1.webp" alt={copy.hero.imageAlt} fetchPriority="high" decoding="async" />
         </picture>
         <div className="hero-vignette" />
         <div className="hero-bottom">
