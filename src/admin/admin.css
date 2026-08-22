@@ -103,9 +103,11 @@
 .card-preview-pair { margin-top: 28px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(18px, 3vw, 36px); align-items: start; }
 .card-preview-pair figure { margin: 0; display: grid; justify-items: center; gap: 10px; }
 .card-preview-pair figcaption { color: var(--admin-muted); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
-.card-sheet { position: relative; width: min(100%, 355px); aspect-ratio: 2 / 3; overflow: hidden; background: #f8f5ee; box-shadow: 0 22px 55px rgba(40,34,25,.16), 0 0 0 1px rgba(116,94,62,.1); }
-.card-sheet img { width: 100%; height: 100%; display: block; object-fit: fill; }
-.card-sheet--back span { position: absolute; left: 7%; right: 7%; bottom: 6.1%; overflow: hidden; color: #182b3d; font-family: "Avenir Next", Avenir, sans-serif; font-size: clamp(.43rem, 1vw, .67rem); font-weight: 600; letter-spacing: .025em; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.card-sheet { position: relative; width: min(100%, 355px); overflow: hidden; background: #17263d; box-shadow: 0 22px 55px rgba(40,34,25,.16), 0 0 0 1px rgba(116,94,62,.1); }
+.card-sheet--front { aspect-ratio: 941 / 1672; }
+.card-sheet--back { aspect-ratio: 1417 / 2126; }
+.card-sheet img { width: 100%; height: 100%; display: block; object-fit: contain; }
+.card-sheet--back span { position: absolute; left: 7%; right: 7%; top: 84.67%; transform: translateY(-50%); overflow: hidden; color: #f8e8c8; font-family: "Avenir Next", Avenir, sans-serif; font-size: .42rem; font-weight: 600; letter-spacing: .025em; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .card-personal-link { margin-top: 24px; padding: 14px 16px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 18px; border: 1px solid rgba(174,138,88,.28); border-radius: 12px; background: rgba(255,255,255,.55); }
 .card-personal-link span { color: var(--admin-gold); font-size: .68rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .card-personal-link code { overflow: hidden; color: var(--admin-ink); font-size: .82rem; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
@@ -161,7 +163,6 @@
   .card-drawer-layer { padding: 0; place-items: stretch; }
   .card-drawer { width: 100%; max-height: 100svh; min-height: 100svh; padding: 22px 16px 36px; border: 0; border-radius: 0; }
   .card-preview-pair { grid-template-columns: 1fr; gap: 22px; }
-  .card-sheet--back span { font-size: .58rem; }
   .card-personal-link { grid-template-columns: 1fr; gap: 6px; }
   .card-personal-link code { text-align: left; }
   .card-actions { display: grid; grid-template-columns: 1fr; }

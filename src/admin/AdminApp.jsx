@@ -64,21 +64,15 @@ const statusLabels = {
 };
 
 const cardLanguages = new Set(["de", "en", "hu", "sr"]);
-// Update this fingerprint whenever the approved front artwork changes so
-// already-open admin sessions cannot reuse a stale browser/CDN image cache.
-const cardFrontArtworkVersion = "cd53b6c5d976";
-const cardCodeLabels = {
-  de: "Einladungscode",
-  en: "Invitation code",
-  hu: "Meghívókód",
-  sr: "Kod pozivnice",
-};
+// Update this fingerprint whenever any approved card artwork changes so
+// already-open admin sessions cannot reuse stale browser/CDN image caches.
+const cardArtworkVersion = "afecd18ad572";
 
 function cardAssets(language) {
   const normalized = cardLanguages.has(language) ? language.toUpperCase() : "EN";
   return {
-    front: `/assets/cards/${normalized}-FRONT.png?v=${cardFrontArtworkVersion}`,
-    back: `/assets/cards/${normalized}-BACK.png`,
+    front: `/assets/cards/${normalized}-FRONT.png?v=${cardArtworkVersion}`,
+    back: `/assets/cards/${normalized}-BACK.png?v=${cardArtworkVersion}`,
   };
 }
 
@@ -89,22 +83,24 @@ function openPrintableCard(invitation) {
   const assets = cardAssets(invitation.default_language);
   const front = new URL(assets.front, window.location.origin).href;
   const back = new URL(assets.back, window.location.origin).href;
-  const personalCode = `${cardCodeLabels[invitation.default_language] || cardCodeLabels.en}: ${invitation.code}`;
+  const personalCode = invitation.code;
   popup.document.write(`<!doctype html>
     <html><head><meta charset="utf-8"><title>Wedding invitation</title>
     <style>
       @page { size: 120mm 180mm; margin: 0; }
       * { box-sizing: border-box; }
       html, body { margin: 0; background: #d9d5ce; }
-      .page { position: relative; width: 120mm; height: 180mm; margin: 0 auto; overflow: hidden; page-break-after: always; background: #f8f5ee; }
+      .page { position: relative; width: 120mm; height: 180mm; margin: 0 auto; overflow: hidden; page-break-after: always; background: #17263d; }
       .page:last-child { page-break-after: auto; }
-      img { display: block; width: 100%; height: 100%; object-fit: fill; }
-      .personal-link { position: absolute; left: 10mm; right: 10mm; bottom: 11mm; text-align: center; color: #182b3d; font: 600 8.5pt/1.2 "Avenir Next", Avenir, Helvetica, sans-serif; letter-spacing: .025em; }
+      img { display: block; width: 100%; height: 100%; }
+      .page--front img { object-fit: contain; }
+      .page--back img { object-fit: fill; }
+      .personal-code { position: absolute; left: 10mm; right: 10mm; top: 84.67%; transform: translateY(-50%); text-align: center; color: #f8e8c8; font: 600 6.2pt/1 "Avenir Next", Avenir, Helvetica, sans-serif; letter-spacing: .025em; }
       @media screen { .page { margin-block: 18px; box-shadow: 0 18px 60px rgba(14,31,44,.2); } }
       @media print { html, body { background: transparent; } .page { margin: 0; box-shadow: none; } }
     </style></head><body>
-      <section class="page"><img src="${front}" alt="Wedding invitation front"></section>
-      <section class="page"><img src="${back}" alt="Wedding invitation back"><div class="personal-link">${personalCode}</div></section>
+      <section class="page page--front"><img src="${front}" alt="Wedding invitation front"></section>
+      <section class="page page--back"><img src="${back}" alt="Wedding invitation back"><div class="personal-code">${personalCode}</div></section>
       <script>Promise.all(Array.from(document.images).map((image) => image.decode())).then(() => { window.focus(); window.print(); });<\/script>
     </body></html>`);
   popup.document.close();
@@ -172,13 +168,12 @@ async function downloadPersonalizedBack(invitation) {
   context.drawImage(image, 0, 0);
   URL.revokeObjectURL(objectUrl);
 
-  await document.fonts?.load('600 35px "Avenir Next"');
-  context.fillStyle = "#182b3d";
-  context.font = '600 35px "Avenir Next", Avenir, Helvetica, sans-serif';
+  await document.fonts?.load('600 26px "Avenir Next"');
+  context.fillStyle = "#f8e8c8";
+  context.font = '600 26px "Avenir Next", Avenir, Helvetica, sans-serif';
   context.textAlign = "center";
   context.textBaseline = "middle";
-  const personalCode = `${cardCodeLabels[invitation.default_language] || cardCodeLabels.en}: ${invitation.code}`;
-  context.fillText(personalCode, canvas.width / 2, canvas.height - 130);
+  context.fillText(invitation.code, canvas.width / 2, 1800);
 
   const renderedBlob = await new Promise((resolve, reject) => canvas.toBlob((result) => result ? resolve(result) : reject(new Error("Card image could not be generated")), "image/png"));
   const downloadBlob = await withPngDensity(renderedBlob, 300);
@@ -351,12 +346,12 @@ function CardDrawer({ invitation, onClose, onGenerated, onCopyLink }) {
       <button className="admin-modal-backdrop" onClick={onClose} aria-label="Close" />
       <section className="card-drawer" role="dialog" aria-modal="true" aria-label={`Invitation card for ${invitation.display_name}`}>
         <header>
-          <div><p className="admin-kicker">{invitation.default_language.toUpperCase()} · Print-ready</p><h2>{invitation.display_name}</h2><p>Final 120 × 180 mm design · 300 dpi</p></div>
+          <div><p className="admin-kicker">{invitation.default_language.toUpperCase()} · Approved artwork</p><h2>{invitation.display_name}</h2><p>New front and back design · personalized code included</p></div>
           <button className="icon-button" onClick={onClose} aria-label="Close"><X size={20} /></button>
         </header>
         <div className="card-preview-pair">
-          <figure><div className="card-sheet"><img src={assets.front} alt={`${invitation.default_language.toUpperCase()} invitation front`} /></div><figcaption>Front</figcaption></figure>
-          <figure><div className="card-sheet card-sheet--back"><img src={assets.back} alt={`${invitation.default_language.toUpperCase()} invitation back`} /><span>{cardCodeLabels[invitation.default_language] || cardCodeLabels.en}: {invitation.code}</span></div><figcaption>Back · invitation code</figcaption></figure>
+          <figure><div className="card-sheet card-sheet--front"><img src={assets.front} alt={`${invitation.default_language.toUpperCase()} invitation front`} /></div><figcaption>Front</figcaption></figure>
+          <figure><div className="card-sheet card-sheet--back"><img src={assets.back} alt={`${invitation.default_language.toUpperCase()} invitation back`} /><span>{invitation.code}</span></div><figcaption>Back · invitation code</figcaption></figure>
         </div>
         <div className="card-personal-link"><span>Personal invitation</span><code>https://{weddingHost}/{invitation.code}</code></div>
         <div className="card-actions">
@@ -366,7 +361,7 @@ function CardDrawer({ invitation, onClose, onGenerated, onCopyLink }) {
           <button className="admin-button" onClick={downloadBack} disabled={downloadingBack}><Download size={16} />{downloadingBack ? "Creating back…" : "Download personalized back"}</button>
         </div>
         {downloadError && <p className="form-error card-download-error">{downloadError}</p>}
-        <p className="card-note">The artwork is the approved final design. Only the invitation code is added in the unused lower margin of the printed back. Personal links remain available digitally.</p>
+        <p className="card-note">The approved artwork is shared by language. This preview and the personalized back download insert this guest's unchanged invitation code into the dedicated code field.</p>
       </section>
     </div>
   );
