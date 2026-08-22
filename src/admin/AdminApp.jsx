@@ -66,7 +66,7 @@ const statusLabels = {
 const cardLanguages = new Set(["de", "en", "hu", "sr"]);
 // Update this fingerprint whenever any approved card artwork changes so
 // already-open admin sessions cannot reuse stale browser/CDN image caches.
-const cardArtworkVersion = "afecd18ad572";
+const cardArtworkVersion = "9f0f536c76fb";
 
 function cardAssets(language) {
   const normalized = cardLanguages.has(language) ? language.toUpperCase() : "EN";
@@ -93,7 +93,7 @@ function openPrintableCard(invitation) {
       .page { position: relative; width: 120mm; height: 180mm; margin: 0 auto; overflow: hidden; page-break-after: always; background: #17263d; }
       .page:last-child { page-break-after: auto; }
       img { display: block; width: 100%; height: 100%; }
-      .page--front img { object-fit: contain; }
+      .page--front img { object-fit: fill; }
       .page--back img { object-fit: fill; }
       .personal-code { position: absolute; left: 10mm; right: 10mm; top: 84.67%; transform: translateY(-50%); text-align: center; color: #f8e8c8; font: 600 6.2pt/1 "Avenir Next", Avenir, Helvetica, sans-serif; letter-spacing: .025em; }
       @media screen { .page { margin-block: 18px; box-shadow: 0 18px 60px rgba(14,31,44,.2); } }
@@ -346,7 +346,7 @@ function CardDrawer({ invitation, onClose, onGenerated, onCopyLink }) {
       <button className="admin-modal-backdrop" onClick={onClose} aria-label="Close" />
       <section className="card-drawer" role="dialog" aria-modal="true" aria-label={`Invitation card for ${invitation.display_name}`}>
         <header>
-          <div><p className="admin-kicker">{invitation.default_language.toUpperCase()} · Approved artwork</p><h2>{invitation.display_name}</h2><p>New front and back design · personalized code included</p></div>
+          <div><p className="admin-kicker">{invitation.default_language.toUpperCase()} · Print-ready</p><h2>{invitation.display_name}</h2><p>Final 120 × 180 mm design · 300 dpi · personalized code included</p></div>
           <button className="icon-button" onClick={onClose} aria-label="Close"><X size={20} /></button>
         </header>
         <div className="card-preview-pair">
