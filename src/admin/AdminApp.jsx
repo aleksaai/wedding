@@ -411,14 +411,21 @@ function ResponseDrawer({ invitation, onClose }) {
           <div><dt>Group</dt><dd>{categories[invitation.category].label}</dd></div>
           <div><dt>Language</dt><dd>{invitation.default_language.toUpperCase()}</dd></div>
           <div><dt>List</dt><dd>{invitation.is_backup ? "Backup list" : "Guest list"}</dd></div>
-          <div><dt>Allowed</dt><dd>{invitation.max_adults} adults · {invitation.max_children} children</dd></div>
+          <div><dt>Planned</dt><dd>{invitation.max_adults} adults · {invitation.max_children} children<em className="planned-note">children are not capped</em></dd></div>
           <div><dt>Opens</dt><dd>{invitation.open_count}</dd></div>
         </dl>
         <section className={`response-card ${response ? "has-response" : ""}`}>
           <p className="admin-kicker">RSVP response</p>
           {!response ? <p>No response submitted yet.</p> : <>
             <h3>{response.attending ? "Yes, attending" : "No, cannot attend"}</h3>
-            {response.attending && <p>{1 + response.partner_count} adult{1 + response.partner_count === 1 ? "" : "s"} · {response.children_count} children</p>}
+            {response.attending && <>
+              <p>{1 + response.partner_count + (response.kids_18_plus || 0)} adult{1 + response.partner_count + (response.kids_18_plus || 0) === 1 ? "" : "s"} · {response.children_count} child{response.children_count === 1 ? "" : "ren"} in total</p>
+              <ul className="age-breakdown">
+                <li><span>Under 3</span><strong>{response.kids_under_3 || 0}</strong></li>
+                <li><span>3 to 17</span><strong>{response.kids_3_to_17 || 0}</strong></li>
+                <li><span>18 and over</span><strong>{response.kids_18_plus || 0}</strong><em>counted as adults</em></li>
+              </ul>
+            </>}
             {response.dietary_notes && <div><strong>Dietary notes</strong><p>{response.dietary_notes}</p></div>}
             {response.message && <div><strong>Message</strong><p>{response.message}</p></div>}
           </>}
@@ -495,7 +502,13 @@ export function AdminApp() {
       invitations: active.length,
       invited: active.reduce((sum, item) => sum + item.max_adults + item.max_children, 0),
       responses: active.filter((item) => item.responded_at).length,
-      attending: active.reduce((sum, item) => sum + (item.wedding_rsvps?.attending ? 1 + item.wedding_rsvps.partner_count + item.wedding_rsvps.children_count : 0), 0),
+      // Bewirtung rechnet nach Altersgruppe: ab 18 wie ein Erwachsener,
+      // 3 bis 17 reduziert, unter 3 separat.
+      attendingAdults: active.reduce((sum, item) => { const r = item.wedding_rsvps; return sum + (r?.attending ? 1 + r.partner_count + (r.kids_18_plus || 0) : 0); }, 0),
+      attendingKids: active.reduce((sum, item) => { const r = item.wedding_rsvps; return sum + (r?.attending ? (r.kids_3_to_17 || 0) : 0); }, 0),
+      attendingToddlers: active.reduce((sum, item) => { const r = item.wedding_rsvps; return sum + (r?.attending ? (r.kids_under_3 || 0) : 0); }, 0),
+      attending: active.reduce((sum, item) => { const r = item.wedding_rsvps; return sum + (r?.attending ? 1 + r.partner_count + r.children_count : 0); }, 0),
+      extraKids: active.reduce((sum, item) => { const r = item.wedding_rsvps; return sum + (r?.attending ? Math.max(r.children_count - item.max_children, 0) : 0); }, 0),
       backupInvitations: backup.length,
       backupPeople: backup.reduce((sum, item) => sum + item.max_adults + item.max_children, 0),
     };
@@ -552,7 +565,8 @@ export function AdminApp() {
             <article><span>Invitations</span><strong>{totals.invitations}</strong></article>
             <article><span>Invited people</span><strong>{totals.invited}</strong></article>
             <article><span>Responses</span><strong>{totals.responses}<small> / {totals.invitations}</small></strong></article>
-            <article><span>Attending</span><strong>{totals.attending}</strong></article>
+            <article><span>Attending</span><strong>{totals.attending}</strong><small>{totals.attendingAdults} adults · {totals.attendingKids} kids 3-17 · {totals.attendingToddlers} under 3</small></article>
+            <article><span>Extra kids</span><strong>{totals.extraKids}</strong><small>beyond what was planned</small></article>
           </> : <>
             <article><span>Backup households</span><strong>{totals.backupInvitations}</strong></article>
             <article><span>Backup people</span><strong>{totals.backupPeople}</strong></article>

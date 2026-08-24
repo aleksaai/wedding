@@ -122,7 +122,9 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
   const [matchedInvitation, setMatchedInvitation] = useState(null);
   const [attendance, setAttendance] = useState("");
   const [partner, setPartner] = useState(0);
-  const [children, setChildren] = useState(0);
+  const [kidsUnder3, setKidsUnder3] = useState(0);
+  const [kids3To17, setKids3To17] = useState(0);
+  const [kids18Plus, setKids18Plus] = useState(0);
   const [diet, setDiet] = useState("");
   const [message, setMessage] = useState("");
   const [manualCode, setManualCode] = useState("");
@@ -130,12 +132,17 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
   const [submitError, setSubmitError] = useState("");
   const activeInvitation = invitation || matchedInvitation;
   const needsCode = !invitation && !matchedInvitation;
+  // Kinder sind bewusst nicht an max_children gebunden: wer Kinder mitbringen
+  // moechte, soll das eintragen koennen, auch wenn dafuer nichts eingeplant war.
+  const childrenLimit = activeInvitation?.children_limit ?? 10;
 
   useEffect(() => {
     if (!open || !activeInvitation?.response) return;
     setAttendance(activeInvitation.response.attending ? "yes" : "no");
     setPartner(activeInvitation.response.partner_count || 0);
-    setChildren(activeInvitation.response.children_count || 0);
+    setKidsUnder3(activeInvitation.response.kids_under_3 || 0);
+    setKids3To17(activeInvitation.response.kids_3_to_17 || 0);
+    setKids18Plus(activeInvitation.response.kids_18_plus || 0);
     setDiet(activeInvitation.response.dietary_notes || "");
     setMessage(activeInvitation.response.message || "");
   }, [open, activeInvitation]);
@@ -167,7 +174,9 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
       setSubmitError("");
       setAttendance("");
       setPartner(0);
-      setChildren(0);
+      setKidsUnder3(0);
+      setKids3To17(0);
+      setKids18Plus(0);
       setDiet("");
       setMessage("");
     }, 350);
@@ -201,7 +210,9 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
       p_code: invitationCode,
       p_attending: attendance === "yes",
       p_partner_count: partner,
-      p_children_count: children,
+      p_kids_under_3: kidsUnder3,
+      p_kids_3_to_17: kids3To17,
+      p_kids_18_plus: kids18Plus,
       p_dietary_notes: diet,
       p_message: message,
     });
@@ -279,7 +290,9 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
                       <p className="sheet-copy">{text.companionsCopy}</p>
                       <div className="counter-list">
                         <Counter label={text.partner} hint={text.partnerHint} value={partner} max={Math.max(activeInvitation.max_adults - 1, 0)} onChange={setPartner} decreaseLabel={text.decrease(text.partner)} increaseLabel={text.increase(text.partner)} />
-                        <Counter label={text.children} hint={text.childrenHint} value={children} max={activeInvitation.max_children} onChange={setChildren} decreaseLabel={text.decrease(text.children)} increaseLabel={text.increase(text.children)} />
+                        <Counter label={text.kidsUnder3} hint={text.kidsUnder3Hint} value={kidsUnder3} max={childrenLimit} onChange={setKidsUnder3} decreaseLabel={text.decrease(text.kidsUnder3)} increaseLabel={text.increase(text.kidsUnder3)} />
+                        <Counter label={text.kids3To17} hint={text.kids3To17Hint} value={kids3To17} max={childrenLimit} onChange={setKids3To17} decreaseLabel={text.decrease(text.kids3To17)} increaseLabel={text.increase(text.kids3To17)} />
+                        <Counter label={text.kids18Plus} hint={text.kids18PlusHint} value={kids18Plus} max={childrenLimit} onChange={setKids18Plus} decreaseLabel={text.decrease(text.kids18Plus)} increaseLabel={text.increase(text.kids18Plus)} />
                       </div>
                     </>
                   )}
@@ -307,7 +320,7 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
                       <motion.span initial={{ scale: 0.5 }} animate={{ scale: 1 }} className="success-seal"><Check size={28} /></motion.span>
                       <p className="eyebrow">{text.thanks}</p>
                       <h3>{attendance === "yes" ? text.successYes : text.successNo}</h3>
-                      <p>{attendance === "yes" ? text.successAttending({ partner, children }) : text.successDeclined}</p>
+                      <p>{attendance === "yes" ? text.successAttending({ partner, kidsUnder3, kids3To17, kids18Plus }) : text.successDeclined}</p>
                     </div>
                   )}
                 </motion.div>
