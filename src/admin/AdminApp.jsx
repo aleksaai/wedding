@@ -68,6 +68,37 @@ const cardLanguages = new Set(["de", "en", "hu", "sr"]);
 // already-open admin sessions cannot reuse stale browser/CDN image caches.
 const cardArtworkVersion = "9f0f536c76fb";
 
+// Download names should read like the guest, not like the database:
+// "kyung_einladung_front.png" instead of "0B59A6DB-DE-FRONT.png". The code is
+// only appended when two households share a display name, so the files stay
+// tellable apart (there are two "Lilla" invitations).
+function slugifyName(name) {
+  return (name || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/['’]/g, "")
+    .replace(/ß/g, "ss")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function invitationFileBase(invitation, duplicateNames) {
+  const slug = slugifyName(invitation.display_name);
+  if (!slug) return `${invitation.code.toLowerCase()}_einladung`;
+  if (duplicateNames?.has(slug)) return `${slug}_${invitation.code.toLowerCase()}_einladung`;
+  return `${slug}_einladung`;
+}
+
+function duplicateNameSet(invitations) {
+  const seen = new Map();
+  for (const invitation of invitations) {
+    const slug = slugifyName(invitation.display_name);
+    if (slug) seen.set(slug, (seen.get(slug) || 0) + 1);
+  }
+  return new Set(Array.from(seen.entries()).filter(([, count]) => count > 1).map(([slug]) => slug));
+}
+
 function cardAssets(language) {
   const normalized = cardLanguages.has(language) ? language.toUpperCase() : "EN";
   return {
@@ -76,7 +107,7 @@ function cardAssets(language) {
   };
 }
 
-function openPrintableCard(invitation) {
+function openPrintableCard(invitation, fileBase) {
   const popup = window.open("", "_blank", "width=940,height=900");
   if (!popup) return false;
   popup.opener = null;
@@ -85,7 +116,7 @@ function openPrintableCard(invitation) {
   const back = new URL(assets.back, window.location.origin).href;
   const personalCode = invitation.code;
   popup.document.write(`<!doctype html>
-    <html><head><meta charset="utf-8"><title>Wedding invitation</title>
+    <html><head><meta charset="utf-8"><title>${fileBase}</title>
     <style>
       @page { size: 120mm 180mm; margin: 0; }
       * { box-sizing: border-box; }
@@ -151,7 +182,7 @@ async function withPngDensity(blob, dpi = 300) {
   return new Blob(parts, { type: "image/png" });
 }
 
-async function downloadPersonalizedBack(invitation) {
+async function downloadPersonalizedBack(invitation, fileBase) {
   const { back } = cardAssets(invitation.default_language);
   const response = await fetch(back);
   if (!response.ok) throw new Error("Card artwork could not be loaded");
@@ -180,7 +211,7 @@ async function downloadPersonalizedBack(invitation) {
   const downloadUrl = URL.createObjectURL(downloadBlob);
   const link = document.createElement("a");
   link.href = downloadUrl;
-  link.download = `${invitation.code}-${invitation.default_language.toUpperCase()}-BACK-personalized.png`;
+  link.download = `${fileBase}_back.png`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -314,7 +345,7 @@ function InviteForm({ open, onClose, onSaved, invitation, defaultBackup = false 
   );
 }
 
-function CardDrawer({ invitation, onClose, onGenerated, onCopyLink }) {
+function CardDrawer({ invitation, fileBase, onClose, onGenerated, onCopyLink }) {
   const [downloadingBack, setDownloadingBack] = useState(false);
   const [downloadError, setDownloadError] = useState("");
   useEffect(() => {
@@ -325,14 +356,14 @@ function CardDrawer({ invitation, onClose, onGenerated, onCopyLink }) {
   const assets = cardAssets(invitation.default_language);
 
   function printCard() {
-    if (openPrintableCard(invitation)) onGenerated(invitation);
+    if (openPrintableCard(invitation, fileBase)) onGenerated(invitation);
   }
 
   async function downloadBack() {
     setDownloadingBack(true);
     setDownloadError("");
     try {
-      await downloadPersonalizedBack(invitation);
+      await downloadPersonalizedBack(invitation, fileBase);
       onGenerated(invitation);
     } catch (error) {
       setDownloadError(error.message || "The personalized back could not be downloaded.");
@@ -357,7 +388,7 @@ function CardDrawer({ invitation, onClose, onGenerated, onCopyLink }) {
         <div className="card-actions">
           <button className="admin-button admin-button--dark" onClick={printCard}><Printer size={17} />Print / save as PDF</button>
           <button className="admin-button" onClick={() => onCopyLink(invitation.code)}><Clipboard size={16} />Copy link</button>
-          <a className="admin-button" href={assets.front} download={`${invitation.code}-${invitation.default_language.toUpperCase()}-FRONT.png`}><Download size={16} />Download front</a>
+          <a className="admin-button" href={assets.front} download={`${fileBase}_front.png`}><Download size={16} />Download front</a>
           <button className="admin-button" onClick={downloadBack} disabled={downloadingBack}><Download size={16} />{downloadingBack ? "Creating back…" : "Download personalized back"}</button>
         </div>
         {downloadError && <p className="form-error card-download-error">{downloadError}</p>}
@@ -448,6 +479,7 @@ export function AdminApp() {
     return () => { active = false; };
   }, [session]);
 
+  const duplicateNames = useMemo(() => duplicateNameSet(invitations), [invitations]);
   const filtered = useMemo(() => invitations.filter((invitation) => {
     const query = search.trim().toLowerCase();
     return (!query || `${invitation.display_name} ${invitation.code} ${invitation.internal_notes || ""}`.toLowerCase().includes(query))
@@ -557,7 +589,7 @@ export function AdminApp() {
       {notice && <div className="admin-toast">{notice}</div>}
       <InviteForm open={formOpen} invitation={editing} defaultBackup={listView === "backup"} onClose={() => setFormOpen(false)} onSaved={() => { setFormOpen(false); loadInvitations(); }} />
       <ResponseDrawer invitation={selected} onClose={() => setSelected(null)} />
-      <CardDrawer invitation={cardInvitation} onClose={() => setCardInvitation(null)} onGenerated={recordCardGenerated} onCopyLink={copyLink} />
+      <CardDrawer invitation={cardInvitation} fileBase={cardInvitation ? invitationFileBase(cardInvitation, duplicateNames) : ""} onClose={() => setCardInvitation(null)} onGenerated={recordCardGenerated} onCopyLink={copyLink} />
     </main>
   );
 }
