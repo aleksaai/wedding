@@ -54,7 +54,7 @@ export const translations = {
       respond: "Antwort geben",
     },
     scene: {
-      imageAlt: "Fischerbastei und Matthiaskirche unter blauem Budapester Himmel",
+      imageAlt: "Aleksa und Debóra halten Händchen an einem Holztisch, hinter ihnen der winterliche Wald",
       eyebrow: "Zwischen Donau, Lichtern und Schnee",
       title: ["Budapest", "im Winter"],
     },
@@ -176,7 +176,7 @@ export const translations = {
       respond: "Visszajelzek",
     },
     scene: {
-      imageAlt: "A Halászbástya és a Mátyás-templom a kék budapesti ég alatt",
+      imageAlt: "Aleksa és Debóra kézen fogva egy faasztalnál, mögöttük a téli erdő",
       eyebrow: "A Duna, a fények és a hó között",
       title: ["Budapest", "télen"],
     },
@@ -298,7 +298,7 @@ export const translations = {
       respond: "Pošaljite odgovor",
     },
     scene: {
-      imageAlt: "Ribarska tvrđava i Matijina crkva pod plavim budimpeštanskim nebom",
+      imageAlt: "Aleksa i Debóra se drže za ruke za drvenim stolom, za njima zimska šuma",
       eyebrow: "Između Dunava, svetala i snega",
       title: ["Budimpešta", "zimi"],
     },
@@ -420,7 +420,7 @@ export const translations = {
       respond: "Send your reply",
     },
     scene: {
-      imageAlt: "Fisherman’s Bastion and Matthias Church beneath a blue Budapest sky",
+      imageAlt: "Aleksa and Debóra holding hands at a wooden table, the winter forest behind them",
       eyebrow: "Between the Danube, lights and snow",
       title: ["Budapest", "in winter"],
     },
