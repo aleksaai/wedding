@@ -23,7 +23,7 @@ export const translations = {
     metaTitle: "Aleksa & Debóra · Hochzeitseinladung",
     nav: { home: "Zum Anfang", language: "Sprache wählen", rsvp: "RSVP" },
     wedding: {
-      couple: "Aleksa Spalevic & Debora Szilagyi",
+      couple: "Aleksa & Debóra",
       date: "23.01.2027",
       city: "Budapest, Ungarn",
       venue: "Budapest",
@@ -145,7 +145,7 @@ export const translations = {
     metaTitle: "Aleksa & Debóra · Esküvői meghívó",
     nav: { home: "Vissza az elejére", language: "Nyelvválasztás", rsvp: "VÁLASZ" },
     wedding: {
-      couple: "Aleksa Spalevic & Debora Szilagyi",
+      couple: "Aleksa & Debóra",
       date: "2027.01.23.",
       city: "Budapest, Magyarország",
       venue: "Budapest",
@@ -267,7 +267,7 @@ export const translations = {
     metaTitle: "Aleksa & Debóra · Pozivnica za venčanje",
     nav: { home: "Nazad na početak", language: "Izaberi jezik", rsvp: "ODGOVOR" },
     wedding: {
-      couple: "Aleksa Spalevic & Debora Szilagyi",
+      couple: "Aleksa & Debóra",
       date: "23.01.2027.",
       city: "Budimpešta, Mađarska",
       venue: "Budimpešta",
@@ -389,7 +389,7 @@ export const translations = {
     metaTitle: "Aleksa & Debóra · Wedding Invitation",
     nav: { home: "Back to the beginning", language: "Choose language", rsvp: "RSVP" },
     wedding: {
-      couple: "Aleksa Spalevic & Debora Szilagyi",
+      couple: "Aleksa & Debóra",
       date: "23.01.2027",
       city: "Budapest, Hungary",
       venue: "Budapest",
