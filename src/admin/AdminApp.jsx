@@ -411,7 +411,7 @@ function ResponseDrawer({ invitation, onClose }) {
           <div><dt>Group</dt><dd>{categories[invitation.category].label}</dd></div>
           <div><dt>Language</dt><dd>{invitation.default_language.toUpperCase()}</dd></div>
           <div><dt>List</dt><dd>{invitation.is_backup ? "Backup list" : "Guest list"}</dd></div>
-          <div><dt>Planned</dt><dd>{invitation.max_adults} adults · {invitation.max_children} children<em className="planned-note">children are not capped</em></dd></div>
+          <div><dt>Planned</dt><dd>{invitation.max_adults} adults · {invitation.max_children} children<em className="planned-note">one extra adult and children are always allowed</em></dd></div>
           <div><dt>Opens</dt><dd>{invitation.open_count}</dd></div>
         </dl>
         <section className={`response-card ${response ? "has-response" : ""}`}>
@@ -509,6 +509,7 @@ export function AdminApp() {
       attendingToddlers: active.reduce((sum, item) => { const r = item.wedding_rsvps; return sum + (r?.attending ? (r.kids_under_3 || 0) : 0); }, 0),
       attending: active.reduce((sum, item) => { const r = item.wedding_rsvps; return sum + (r?.attending ? 1 + r.partner_count + r.children_count : 0); }, 0),
       extraKids: active.reduce((sum, item) => { const r = item.wedding_rsvps; return sum + (r?.attending ? Math.max(r.children_count - item.max_children, 0) : 0); }, 0),
+      extraAdults: active.reduce((sum, item) => { const r = item.wedding_rsvps; return sum + (r?.attending ? Math.max(1 + r.partner_count + (r.kids_18_plus || 0) - item.max_adults, 0) : 0); }, 0),
       backupInvitations: backup.length,
       backupPeople: backup.reduce((sum, item) => sum + item.max_adults + item.max_children, 0),
     };
@@ -566,7 +567,7 @@ export function AdminApp() {
             <article><span>Invited people</span><strong>{totals.invited}</strong></article>
             <article><span>Responses</span><strong>{totals.responses}<small> / {totals.invitations}</small></strong></article>
             <article><span>Attending</span><strong>{totals.attending}</strong><small>{totals.attendingAdults} adults · {totals.attendingKids} kids 3-17 · {totals.attendingToddlers} under 3</small></article>
-            <article><span>Extra kids</span><strong>{totals.extraKids}</strong><small>beyond what was planned</small></article>
+            <article><span>Beyond plan</span><strong>{totals.extraAdults + totals.extraKids}</strong><small>{totals.extraAdults} adults · {totals.extraKids} kids more than planned</small></article>
           </> : <>
             <article><span>Backup households</span><strong>{totals.backupInvitations}</strong></article>
             <article><span>Backup people</span><strong>{totals.backupPeople}</strong></article>

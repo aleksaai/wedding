@@ -135,6 +135,8 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
   // Kinder sind bewusst nicht an max_children gebunden: wer Kinder mitbringen
   // moechte, soll das eintragen koennen, auch wenn dafuer nichts eingeplant war.
   const childrenLimit = activeInvitation?.children_limit ?? 10;
+  // Ebenso bei Erwachsenen: eine ungeplante Partnerin oder ein Partner ist immer erlaubt.
+  const adultLimit = activeInvitation?.adult_limit ?? Math.max(activeInvitation?.max_adults ?? 1, 1);
 
   useEffect(() => {
     if (!open || !activeInvitation?.response) return;
@@ -289,7 +291,7 @@ function RsvpSheet({ open, onClose, copy, invitation }) {
                       <h3>{text.companionsTitle}</h3>
                       <p className="sheet-copy">{text.companionsCopy}</p>
                       <div className="counter-list">
-                        <Counter label={text.partner} hint={text.partnerHint} value={partner} max={Math.max(activeInvitation.max_adults - 1, 0)} onChange={setPartner} decreaseLabel={text.decrease(text.partner)} increaseLabel={text.increase(text.partner)} />
+                        <Counter label={text.partner} hint={text.partnerHint} value={partner} max={adultLimit} onChange={setPartner} decreaseLabel={text.decrease(text.partner)} increaseLabel={text.increase(text.partner)} />
                         <Counter label={text.kidsUnder3} hint={text.kidsUnder3Hint} value={kidsUnder3} max={childrenLimit} onChange={setKidsUnder3} decreaseLabel={text.decrease(text.kidsUnder3)} increaseLabel={text.increase(text.kidsUnder3)} />
                         <Counter label={text.kids3To17} hint={text.kids3To17Hint} value={kids3To17} max={childrenLimit} onChange={setKids3To17} decreaseLabel={text.decrease(text.kids3To17)} increaseLabel={text.increase(text.kids3To17)} />
                         <Counter label={text.kids18Plus} hint={text.kids18PlusHint} value={kids18Plus} max={childrenLimit} onChange={setKids18Plus} decreaseLabel={text.decrease(text.kids18Plus)} increaseLabel={text.increase(text.kids18Plus)} />
