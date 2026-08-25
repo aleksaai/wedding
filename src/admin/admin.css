@@ -68,6 +68,11 @@
 .progress-actions button { width: 29px; height: 29px; display: grid; place-items: center; border: 1px solid var(--admin-line); border-radius: 7px; color: #a6abae; background: white; cursor: pointer; }
 .progress-actions button.done { color: #3d7250; background: #e4f1e8; }
 .progress-actions span { min-width: 26px; text-align: center; color: #879095; font-size: .72rem; }
+.row-actions { display: flex; align-items: center; gap: 10px; }
+.row-edit { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid var(--admin-line); border-radius: 7px; color: #a6abae; background: white; cursor: pointer; }
+.row-edit:hover { color: var(--admin-ink); }
+.drawer-header-actions { display: flex; gap: 8px; }
+
 .copy-button { display: flex; align-items: center; gap: 6px; border: 0; background: none; color: var(--admin-ink); font-weight: 700; cursor: pointer; }
 .promote-button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border: 1px solid rgba(45,99,64,.18); border-radius: 8px; color: #315f40; background: #e9f2eb; font-size: .72rem; font-weight: 700; white-space: nowrap; cursor: pointer; }
 .not-invited { color: #9a8b70; font-size: .72rem; white-space: nowrap; }

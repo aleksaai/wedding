@@ -456,7 +456,7 @@ function ManualRsvpForm({ invitation, response, onSaved, onCancel }) {
   );
 }
 
-function ResponseDrawer({ invitation, onClose, onChanged }) {
+function ResponseDrawer({ invitation, onClose, onChanged, onEdit }) {
   const [editing, setEditing] = useState(false);
   const [clearing, setClearing] = useState(false);
   useEffect(() => { setEditing(false); setClearing(false); }, [invitation?.id]);
@@ -476,7 +476,13 @@ function ResponseDrawer({ invitation, onClose, onChanged }) {
     <div className="admin-modal-layer drawer-layer">
       <button className="admin-modal-backdrop" onClick={onClose} aria-label="Close" />
       <aside className="response-drawer">
-        <header><div><p className="admin-kicker">Invitation</p><h2>{invitation.display_name}</h2></div><button className="icon-button" onClick={onClose}><X size={20} /></button></header>
+        <header>
+          <div><p className="admin-kicker">Invitation</p><h2>{invitation.display_name}</h2></div>
+          <div className="drawer-header-actions">
+            {onEdit && <button className="icon-button" onClick={() => onEdit(invitation)} title="Edit name and details"><Pencil size={18} /></button>}
+            <button className="icon-button" onClick={onClose} aria-label="Close"><X size={20} /></button>
+          </div>
+        </header>
         <div className="invite-link-card"><code>{window.location.origin}/{invitation.code}</code><a href={`/${invitation.code}`} target="_blank" rel="noreferrer"><ExternalLink size={16} /></a></div>
         <dl className="response-facts">
           <div><dt>Group</dt><dd>{categories[invitation.category].label}</dd></div>
@@ -678,7 +684,10 @@ export function AdminApp() {
                     <td><span className="people-count">{invitation.max_adults} {invitation.max_adults === 1 ? "adult" : "adults"}{invitation.max_children ? ` · ${invitation.max_children} ${invitation.max_children === 1 ? "child" : "children"}` : ""}</span></td>
                     <td><span className={`status-pill ${inviteStatus}`}>{statusLabels[inviteStatus]}</span></td>
                     <td>{invitation.is_backup ? <button className="promote-button" onClick={() => promote(invitation)}><Users size={15} />Move to guest list</button> : <div className="progress-actions"><button className={invitation.card_generated_at ? "done" : ""} onClick={() => setCardInvitation(invitation)} title="Open invitation card"><CreditCard size={17} /></button><button className={invitation.sent_at ? "done" : ""} onClick={() => mark(invitation, "sent_at")} title="Sent"><Send size={16} /></button><span title={`${invitation.open_count} opens`}>{invitation.open_count}</span></div>}</td>
-                    <td>{invitation.is_backup ? <span className="not-invited">Not invited</span> : <button className="copy-button" onClick={() => copyLink(invitation.code)}><Clipboard size={15} />Copy</button>}</td>
+                    <td><div className="row-actions">
+                      {invitation.is_backup ? <span className="not-invited">Not invited</span> : <button className="copy-button" onClick={() => copyLink(invitation.code)}><Clipboard size={15} />Copy</button>}
+                      <button className="row-edit" onClick={() => { setEditing(invitation); setFormOpen(true); }} title="Edit invitation"><Pencil size={15} /></button>
+                    </div></td>
                   </tr>;
                 })}
               </tbody>
@@ -688,7 +697,7 @@ export function AdminApp() {
       </section>
       {notice && <div className="admin-toast">{notice}</div>}
       <InviteForm open={formOpen} invitation={editing} defaultBackup={listView === "backup"} onClose={() => setFormOpen(false)} onSaved={() => { setFormOpen(false); loadInvitations(); }} />
-      <ResponseDrawer invitation={selected} onClose={() => setSelected(null)} onChanged={(text) => { setSelected(null); setNotice(text); window.setTimeout(() => setNotice(""), 2200); loadInvitations(); }} />
+      <ResponseDrawer invitation={selected} onEdit={(item) => { setSelected(null); setEditing(item); setFormOpen(true); }} onClose={() => setSelected(null)} onChanged={(text) => { setSelected(null); setNotice(text); window.setTimeout(() => setNotice(""), 2200); loadInvitations(); }} />
       <CardDrawer invitation={cardInvitation} fileBase={cardInvitation ? invitationFileBase(cardInvitation, duplicateNames) : ""} onClose={() => setCardInvitation(null)} onGenerated={recordCardGenerated} onCopyLink={copyLink} />
     </main>
   );
