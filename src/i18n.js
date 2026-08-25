@@ -54,7 +54,7 @@ export const translations = {
       respond: "Antwort geben",
     },
     scene: {
-      imageAlt: "Aleksa und Debóra halten Händchen an einem Holztisch, hinter ihnen der winterliche Wald",
+      imageAlt: "Illustration von Aleksa und Debóra in ungarischer Tracht auf der Fischerbastei, im Schneetreiben über der Donau mit Blick auf das Parlament",
       eyebrow: "Zwischen Donau, Lichtern und Schnee",
       title: ["Budapest", "im Winter"],
     },
@@ -180,7 +180,7 @@ export const translations = {
       respond: "Visszajelzek",
     },
     scene: {
-      imageAlt: "Aleksa és Debóra kézen fogva egy faasztalnál, mögöttük a téli erdő",
+      imageAlt: "Illusztráció Aleksáról és Debóráról magyar népviseletben a Halászbástyán, hóesésben, a Duna és a Parlament felett",
       eyebrow: "A Duna, a fények és a hó között",
       title: ["Budapest", "télen"],
     },
@@ -306,7 +306,7 @@ export const translations = {
       respond: "Pošaljite odgovor",
     },
     scene: {
-      imageAlt: "Aleksa i Debóra se drže za ruke za drvenim stolom, za njima zimska šuma",
+      imageAlt: "Ilustracija Alekse i Debóre u mađarskoj narodnoj nošnji na Ribarskoj tvrđavi, u snegu iznad Dunava s pogledom na Parlament",
       eyebrow: "Između Dunava, svetala i snega",
       title: ["Budimpešta", "zimi"],
     },
@@ -432,7 +432,7 @@ export const translations = {
       respond: "Send your reply",
     },
     scene: {
-      imageAlt: "Aleksa and Debóra holding hands at a wooden table, the winter forest behind them",
+      imageAlt: "Illustration of Aleksa and Debóra in Hungarian folk dress on Fisherman’s Bastion, snow falling over the Danube with the Parliament beyond",
       eyebrow: "Between the Danube, lights and snow",
       title: ["Budapest", "in winter"],
     },

@@ -429,7 +429,7 @@ export function App({ invitation = null }) {
 
       <section className="scene-section paper-section" aria-label={copy.scene.imageAlt}>
         <figure className="scene-card">
-          <img src="/assets/wedding-couple-photo.webp" alt={copy.scene.imageAlt} loading="lazy" />
+          <img src="/assets/wedding-couple-illustration.webp" alt={copy.scene.imageAlt} loading="lazy" decoding="async" />
         </figure>
       </section>
 
