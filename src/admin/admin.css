@@ -100,6 +100,18 @@
 .age-breakdown em { flex-basis: 100%; color: #9aa0a3; font-size: .64rem; font-style: normal; }
 .planned-note { display: block; margin-top: 3px; color: #9aa0a3; font-size: .64rem; font-style: normal; font-weight: 400; }
 
+.response-source { margin: 4px 0 0; color: var(--admin-muted); font-size: .72rem; }
+.manual-rsvp { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--admin-line); display: grid; gap: 13px; }
+.manual-attendance { display: flex; gap: 9px; }
+.manual-attendance button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px; border: 1px solid var(--admin-line); border-radius: 9px; color: #59646b; background: white; font-size: .78rem; font-weight: 700; cursor: pointer; }
+.manual-attendance button.is-active { border-color: rgba(45,99,64,.35); color: #2f5c3f; background: #e9f2eb; }
+.manual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+.manual-rsvp label { display: grid; gap: 6px; color: #59646b; font-size: .72rem; font-weight: 700; }
+.manual-rsvp input, .manual-rsvp textarea { padding: 9px 11px; border: 1px solid var(--admin-line); border-radius: 8px; background: white; color: var(--admin-ink); font: inherit; font-size: .82rem; font-weight: 400; }
+.manual-rsvp textarea { resize: vertical; }
+.manual-wide { grid-column: 1 / -1; }
+.manual-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 4px; }
+
 .response-card, .notes-card { margin-top: 20px; padding: 22px; border: 1px solid var(--admin-line); border-radius: 14px; background: rgba(255,255,255,.6); }
 .response-card.has-response { border-color: rgba(54,112,73,.28); background: #eef5ef; }
 .response-card h3 { font-family: Georgia, serif; font-size: 1.7rem; font-weight: 400; }

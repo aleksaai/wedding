@@ -8,8 +8,10 @@ import {
   LogOut,
   Mail,
   Plus,
+  Pencil,
   Printer,
   RotateCcw,
+  Trash2,
   Search,
   Send,
   Users,
@@ -398,9 +400,78 @@ function CardDrawer({ invitation, fileBase, onClose, onGenerated, onCopyLink }) 
   );
 }
 
-function ResponseDrawer({ invitation, onClose }) {
+function ManualRsvpForm({ invitation, response, onSaved, onCancel }) {
+  const [attending, setAttending] = useState(response ? response.attending : true);
+  const [adults, setAdults] = useState(response?.partner_count ?? 0);
+  const [under3, setUnder3] = useState(response?.kids_under_3 ?? 0);
+  const [mid, setMid] = useState(response?.kids_3_to_17 ?? 0);
+  const [grown, setGrown] = useState(response?.kids_18_plus ?? 0);
+  const [diet, setDiet] = useState(response?.dietary_notes ?? "");
+  const [message, setMessage] = useState(response?.message ?? "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const number = (value) => Math.max(0, Math.min(20, Number.isFinite(+value) ? Math.trunc(+value) : 0));
+
+  async function save() {
+    setSaving(true);
+    setError("");
+    const { error: rpcError } = await supabase.rpc("admin_upsert_wedding_rsvp", {
+      p_code: invitation.code,
+      p_attending: attending,
+      p_partner_count: attending ? adults : 0,
+      p_kids_under_3: attending ? under3 : 0,
+      p_kids_3_to_17: attending ? mid : 0,
+      p_kids_18_plus: attending ? grown : 0,
+      p_dietary_notes: diet,
+      p_message: message,
+    });
+    setSaving(false);
+    if (rpcError) setError(rpcError.message);
+    else onSaved("Response recorded");
+  }
+
+  return (
+    <div className="manual-rsvp">
+      <div className="manual-attendance">
+        <button type="button" className={attending ? "is-active" : ""} onClick={() => setAttending(true)}><Check size={15} />Attending</button>
+        <button type="button" className={!attending ? "is-active" : ""} onClick={() => setAttending(false)}><X size={15} />Cannot attend</button>
+      </div>
+      {attending && (
+        <div className="manual-grid">
+          <label>Adults besides them<input type="number" min="0" max="20" value={adults} onChange={(event) => setAdults(number(event.target.value))} /></label>
+          <label>Kids under 3<input type="number" min="0" max="20" value={under3} onChange={(event) => setUnder3(number(event.target.value))} /></label>
+          <label>Kids 3 to 17<input type="number" min="0" max="20" value={mid} onChange={(event) => setMid(number(event.target.value))} /></label>
+          <label>Kids 18 and over<input type="number" min="0" max="20" value={grown} onChange={(event) => setGrown(number(event.target.value))} /></label>
+        </div>
+      )}
+      {attending && <label className="manual-wide">Dietary notes<input value={diet} onChange={(event) => setDiet(event.target.value)} placeholder="vegetarian, allergies …" maxLength={1000} /></label>}
+      <label className="manual-wide">Note<textarea rows="2" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Told us on the phone, said yes for two …" maxLength={2000} /></label>
+      {error && <p className="form-error">{error}</p>}
+      <div className="manual-actions">
+        <button type="button" className="admin-button admin-button--dark" onClick={save} disabled={saving}>{saving ? "Saving…" : "Save response"}</button>
+        {onCancel && <button type="button" className="admin-button" onClick={onCancel}>Cancel</button>}
+      </div>
+    </div>
+  );
+}
+
+function ResponseDrawer({ invitation, onClose, onChanged }) {
+  const [editing, setEditing] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  useEffect(() => { setEditing(false); setClearing(false); }, [invitation?.id]);
   if (!invitation) return null;
   const response = invitation.wedding_rsvps;
+  const adultsTotal = response ? 1 + response.partner_count + (response.kids_18_plus || 0) : 0;
+
+  async function clearResponse() {
+    setClearing(true);
+    const { error } = await supabase.rpc("admin_clear_wedding_rsvp", { p_code: invitation.code });
+    setClearing(false);
+    if (error) window.alert(error.message);
+    else onChanged("Response removed");
+  }
+
   return (
     <div className="admin-modal-layer drawer-layer">
       <button className="admin-modal-backdrop" onClick={onClose} aria-label="Close" />
@@ -416,10 +487,18 @@ function ResponseDrawer({ invitation, onClose }) {
         </dl>
         <section className={`response-card ${response ? "has-response" : ""}`}>
           <p className="admin-kicker">RSVP response</p>
-          {!response ? <p>No response submitted yet.</p> : <>
+          {!response ? (
+            invitation.is_backup
+              ? <p>Move this household to the guest list before recording a response.</p>
+              : <>
+                  <p>No response yet. If they told you by phone, mail or in person, record it here.</p>
+                  <ManualRsvpForm invitation={invitation} response={null} onSaved={onChanged} />
+                </>
+          ) : <>
             <h3>{response.attending ? "Yes, attending" : "No, cannot attend"}</h3>
+            <p className="response-source">{response.source === "admin" ? "Recorded by you" : "Answered by the guest"}</p>
             {response.attending && <>
-              <p>{1 + response.partner_count + (response.kids_18_plus || 0)} adult{1 + response.partner_count + (response.kids_18_plus || 0) === 1 ? "" : "s"} · {response.children_count} child{response.children_count === 1 ? "" : "ren"} in total</p>
+              <p>{adultsTotal} adult{adultsTotal === 1 ? "" : "s"} · {response.children_count} child{response.children_count === 1 ? "" : "ren"} in total</p>
               <ul className="age-breakdown">
                 <li><span>Under 3</span><strong>{response.kids_under_3 || 0}</strong></li>
                 <li><span>3 to 17</span><strong>{response.kids_3_to_17 || 0}</strong></li>
@@ -428,6 +507,12 @@ function ResponseDrawer({ invitation, onClose }) {
             </>}
             {response.dietary_notes && <div><strong>Dietary notes</strong><p>{response.dietary_notes}</p></div>}
             {response.message && <div><strong>Message</strong><p>{response.message}</p></div>}
+            {editing
+              ? <ManualRsvpForm invitation={invitation} response={response} onSaved={onChanged} onCancel={() => setEditing(false)} />
+              : <div className="manual-actions">
+                  <button type="button" className="admin-button" onClick={() => setEditing(true)}><Pencil size={15} />Change response</button>
+                  <button type="button" className="admin-button" onClick={clearResponse} disabled={clearing}><Trash2 size={15} />{clearing ? "Removing…" : "Remove response"}</button>
+                </div>}
           </>}
         </section>
         {invitation.internal_notes && <section className="notes-card"><p className="admin-kicker">Internal notes</p><p>{invitation.internal_notes}</p></section>}
@@ -603,7 +688,7 @@ export function AdminApp() {
       </section>
       {notice && <div className="admin-toast">{notice}</div>}
       <InviteForm open={formOpen} invitation={editing} defaultBackup={listView === "backup"} onClose={() => setFormOpen(false)} onSaved={() => { setFormOpen(false); loadInvitations(); }} />
-      <ResponseDrawer invitation={selected} onClose={() => setSelected(null)} />
+      <ResponseDrawer invitation={selected} onClose={() => setSelected(null)} onChanged={(text) => { setSelected(null); setNotice(text); window.setTimeout(() => setNotice(""), 2200); loadInvitations(); }} />
       <CardDrawer invitation={cardInvitation} fileBase={cardInvitation ? invitationFileBase(cardInvitation, duplicateNames) : ""} onClose={() => setCardInvitation(null)} onGenerated={recordCardGenerated} onCopyLink={copyLink} />
     </main>
   );
