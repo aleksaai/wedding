@@ -506,7 +506,7 @@ function ResponseDrawer({ invitation, onClose, onChanged, onEdit }) {
             {response.attending && <>
               <p>{adultsTotal} adult{adultsTotal === 1 ? "" : "s"} · {response.children_count} child{response.children_count === 1 ? "" : "ren"} in total</p>
               <ul className="age-breakdown">
-                <li><span>Under 3</span><strong>{response.kids_under_3 || 0}</strong></li>
+                <li><span>Under 3</span><strong>{response.kids_under_3 || 0}</strong><em>not counted</em></li>
                 <li><span>3 to 17</span><strong>{response.kids_3_to_17 || 0}</strong></li>
                 <li><span>18 and over</span><strong>{response.kids_18_plus || 0}</strong><em>counted as adults</em></li>
               </ul>
@@ -594,11 +594,13 @@ export function AdminApp() {
       invited: active.reduce((sum, item) => sum + item.max_adults + item.max_children, 0),
       responses: active.filter((item) => item.responded_at).length,
       // Bewirtung rechnet nach Altersgruppe: ab 18 wie ein Erwachsener,
-      // 3 bis 17 reduziert, unter 3 separat.
+      // 3 bis 17 reduziert, unter 3 separat. Unter 3 wird nicht bezahlt und
+      // zaehlt darum nicht in "attending" mit, sondern nur in der
+      // Aufschluesselung darunter.
       attendingAdults: active.reduce((sum, item) => { const r = item.wedding_rsvps; return sum + (r?.attending ? 1 + r.partner_count + (r.kids_18_plus || 0) : 0); }, 0),
       attendingKids: active.reduce((sum, item) => { const r = item.wedding_rsvps; return sum + (r?.attending ? (r.kids_3_to_17 || 0) : 0); }, 0),
       attendingToddlers: active.reduce((sum, item) => { const r = item.wedding_rsvps; return sum + (r?.attending ? (r.kids_under_3 || 0) : 0); }, 0),
-      attending: active.reduce((sum, item) => { const r = item.wedding_rsvps; return sum + (r?.attending ? 1 + r.partner_count + r.children_count : 0); }, 0),
+      attending: active.reduce((sum, item) => { const r = item.wedding_rsvps; return sum + (r?.attending ? 1 + r.partner_count + r.children_count - (r.kids_under_3 || 0) : 0); }, 0),
       extraKids: active.reduce((sum, item) => { const r = item.wedding_rsvps; return sum + (r?.attending ? Math.max(r.children_count - item.max_children, 0) : 0); }, 0),
       extraAdults: active.reduce((sum, item) => { const r = item.wedding_rsvps; return sum + (r?.attending ? Math.max(1 + r.partner_count + (r.kids_18_plus || 0) - item.max_adults, 0) : 0); }, 0),
       backupInvitations: backup.length,
@@ -657,7 +659,7 @@ export function AdminApp() {
             <article><span>Invitations</span><strong>{totals.invitations}</strong></article>
             <article><span>Invited people</span><strong>{totals.invited}</strong></article>
             <article><span>Responses</span><strong>{totals.responses}<small> / {totals.invitations}</small></strong></article>
-            <article><span>Attending</span><strong>{totals.attending}</strong><small>{totals.attendingAdults} adults · {totals.attendingKids} kids 3-17 · {totals.attendingToddlers} under 3</small></article>
+            <article><span>Attending</span><strong>{totals.attending}</strong><small>{totals.attendingAdults} adults · {totals.attendingKids} kids 3-17 · plus {totals.attendingToddlers} under 3, not counted</small></article>
             <article><span>Beyond plan</span><strong>{totals.extraAdults + totals.extraKids}</strong><small>{totals.extraAdults} adults · {totals.extraKids} kids more than planned</small></article>
           </> : <>
             <article><span>Backup households</span><strong>{totals.backupInvitations}</strong></article>
