@@ -68,7 +68,7 @@ const statusLabels = {
 const cardLanguages = new Set(["de", "en", "hu", "sr"]);
 // Update this fingerprint whenever any approved card artwork changes so
 // already-open admin sessions cannot reuse stale browser/CDN image caches.
-const cardArtworkVersion = "231e4e3b3dc7";
+const cardArtworkVersion = "40d3cf693e2b";
 
 // Download names should read like the guest, not like the database:
 // "kyung_einladung_front.png" instead of "0B59A6DB-DE-FRONT.png". The code is
