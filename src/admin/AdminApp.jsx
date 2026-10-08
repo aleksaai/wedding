@@ -68,7 +68,13 @@ const statusLabels = {
 const cardLanguages = new Set(["de", "en", "hu", "sr"]);
 // Update this fingerprint whenever any approved card artwork changes so
 // already-open admin sessions cannot reuse stale browser/CDN image caches.
-const cardArtworkVersion = "40d3cf693e2b";
+const cardArtworkVersion = "b7e2c41f9a06";
+
+// Where the personal code sits on each back (px on the 1417 × 2126 artwork).
+// The Hungarian cards were reset in larger type for older guests, so their code is larger too.
+const cardHeight = 2126;
+const codeSlots = { HU: { y: 1829, size: 56 } };
+const defaultCodeSlot = { y: 1800, size: 26 };
 
 // Download names should read like the guest, not like the database:
 // "kyung_einladung_front.png" instead of "0B59A6DB-DE-FRONT.png". The code is
@@ -106,6 +112,7 @@ function cardAssets(language) {
   return {
     front: `/assets/cards/${normalized}-FRONT.png?v=${cardArtworkVersion}`,
     back: `/assets/cards/${normalized}-BACK.png?v=${cardArtworkVersion}`,
+    codeSlot: codeSlots[normalized] || defaultCodeSlot,
   };
 }
 
@@ -117,6 +124,8 @@ function openPrintableCard(invitation, fileBase) {
   const front = new URL(assets.front, window.location.origin).href;
   const back = new URL(assets.back, window.location.origin).href;
   const personalCode = invitation.code;
+  const codeTop = (assets.codeSlot.y / cardHeight * 100).toFixed(2);
+  const codePt = (assets.codeSlot.size * 72 / 300).toFixed(1);
   popup.document.write(`<!doctype html>
     <html><head><meta charset="utf-8"><title>${fileBase}</title>
     <style>
@@ -128,7 +137,7 @@ function openPrintableCard(invitation, fileBase) {
       img { display: block; width: 100%; height: 100%; }
       .page--front img { object-fit: fill; }
       .page--back img { object-fit: fill; }
-      .personal-code { position: absolute; left: 10mm; right: 10mm; top: 84.67%; transform: translateY(-50%); text-align: center; color: #f8e8c8; font: 600 6.2pt/1 "Avenir Next", Avenir, Helvetica, sans-serif; letter-spacing: .025em; }
+      .personal-code { position: absolute; left: 10mm; right: 10mm; top: ${codeTop}%; transform: translateY(-50%); text-align: center; color: #f8e8c8; font: 600 ${codePt}pt/1 "Avenir Next", Avenir, Helvetica, sans-serif; letter-spacing: .025em; }
       @media screen { .page { margin-block: 18px; box-shadow: 0 18px 60px rgba(14,31,44,.2); } }
       @media print { html, body { background: transparent; } .page { margin: 0; box-shadow: none; } }
     </style></head><body>
@@ -185,7 +194,7 @@ async function withPngDensity(blob, dpi = 300) {
 }
 
 async function downloadPersonalizedBack(invitation, fileBase) {
-  const { back } = cardAssets(invitation.default_language);
+  const { back, codeSlot } = cardAssets(invitation.default_language);
   const response = await fetch(back);
   if (!response.ok) throw new Error("Card artwork could not be loaded");
   const sourceBlob = await response.blob();
@@ -201,12 +210,12 @@ async function downloadPersonalizedBack(invitation, fileBase) {
   context.drawImage(image, 0, 0);
   URL.revokeObjectURL(objectUrl);
 
-  await document.fonts?.load('600 26px "Avenir Next"');
+  await document.fonts?.load(`600 ${codeSlot.size}px "Avenir Next"`);
   context.fillStyle = "#f8e8c8";
-  context.font = '600 26px "Avenir Next", Avenir, Helvetica, sans-serif';
+  context.font = `600 ${codeSlot.size}px "Avenir Next", Avenir, Helvetica, sans-serif`;
   context.textAlign = "center";
   context.textBaseline = "middle";
-  context.fillText(invitation.code, canvas.width / 2, 1800);
+  context.fillText(invitation.code, canvas.width / 2, codeSlot.y);
 
   const renderedBlob = await new Promise((resolve, reject) => canvas.toBlob((result) => result ? resolve(result) : reject(new Error("Card image could not be generated")), "image/png"));
   const downloadBlob = await withPngDensity(renderedBlob, 300);
@@ -384,7 +393,7 @@ function CardDrawer({ invitation, fileBase, onClose, onGenerated, onCopyLink }) 
         </header>
         <div className="card-preview-pair">
           <figure><div className="card-sheet card-sheet--front"><img src={assets.front} alt={`${invitation.default_language.toUpperCase()} invitation front`} /></div><figcaption>Front</figcaption></figure>
-          <figure><div className="card-sheet card-sheet--back"><img src={assets.back} alt={`${invitation.default_language.toUpperCase()} invitation back`} /><span>{invitation.code}</span></div><figcaption>Back · invitation code</figcaption></figure>
+          <figure><div className="card-sheet card-sheet--back"><img src={assets.back} alt={`${invitation.default_language.toUpperCase()} invitation back`} /><span style={{ top: `${assets.codeSlot.y / cardHeight * 100}%`, fontSize: `${0.42 * assets.codeSlot.size / defaultCodeSlot.size}rem` }}>{invitation.code}</span></div><figcaption>Back · invitation code</figcaption></figure>
         </div>
         <div className="card-personal-link"><span>Personal invitation</span><code>https://{weddingHost}/{invitation.code}</code></div>
         <div className="card-actions">
