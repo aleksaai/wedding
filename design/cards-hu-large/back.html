@@ -1,0 +1,57 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+:root{--gold:rgb(213,176,112);--cream:rgb(244,231,202);--white:rgb(232,233,232);--navy:rgb(9,25,48)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1417px;height:2126px;overflow:hidden}
+body{background:url(back-clean.png) 0 0/1417px 2126px no-repeat;color:var(--cream);text-align:center;-webkit-font-smoothing:antialiased}
+.frame{position:absolute;inset:42px;border:2.5px solid var(--cream);border-radius:32px}
+.wrap{position:absolute;inset:42px;display:flex;flex-direction:column;align-items:center;padding:34px 50px 0}
+.serif{font-family:"Bodoni 72";font-weight:400}
+.sans{font-family:"Avenir Next";font-weight:700}
+.head{font-family:"Avenir Next";font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.02em}
+.names{font-size:88px;line-height:1}
+.date{font-family:"Avenir Next";font-weight:700;color:var(--gold);font-size:52px;letter-spacing:.03em;margin-top:8px}
+.div{display:flex;align-items:center;gap:16px;margin:18px 0}
+.div i{display:block;height:2.5px;background:var(--gold)}
+.div b{display:block;width:13px;height:13px;border-radius:50%;background:var(--gold)}
+.sec .head{font-size:42px}
+.sec .main{font-size:56px;line-height:1.1;margin-top:4px}
+.sec .sub{font-family:"Avenir Next";font-weight:700;color:var(--white);font-size:40px;line-height:1.22;margin-top:4px}
+.box{width:100%;background:var(--navy);border:2.5px solid var(--gold);border-radius:34px;padding:30px 40px 34px;margin-top:26px}
+.box .head{font-size:42px}
+.p{font-family:"Avenir Next";font-weight:700;color:var(--white);font-size:38px;line-height:1.24;text-wrap:balance}
+.rows{display:grid;grid-template-columns:auto auto;justify-content:center;column-gap:36px;row-gap:10px;text-align:left;font-size:42px}
+.rows dt{color:var(--gold);font-family:"Avenir Next";font-weight:700;text-transform:uppercase}
+.rows dd{color:var(--white);font-family:"Avenir Next";font-weight:700}
+.code{margin-top:26px}
+.code .head{font-size:42px}
+.slot{height:72px}
+.close{font-size:48px;line-height:1.12}
+</style></head><body>
+<div class="frame"></div>
+<div class="wrap">
+ <div class="serif names">Aleksa &amp; Debóra</div>
+ <div class="date">2027. 01. 23.</div>
+ <div class="div"><i style="width:300px"></i><b></b><i style="width:300px"></i></div>
+ <div class="sec"><div class="head">Templomi szertartás</div><div class="serif main">Kérjük, érkezzetek meg 14:00 óráig.</div><div class="sub">Budapest, Wesselényi utca 53., 1077</div></div>
+ <div class="div"><i style="width:210px"></i><b></b><i style="width:210px"></i></div>
+ <div class="sec"><div class="head">Vacsora</div><div class="serif main">Érkezés 16:30-tól &nbsp;·&nbsp; Kezdés 17:00-kor</div><div class="sub">Festetics-Palota<br>Budapest, Pollack Mihály tér 3., 1088</div></div>
+ <div class="div"><i style="width:210px"></i><b></b><i style="width:210px"></i></div>
+ <div class="sec"><div class="head">Öltözék</div><div class="serif main">Ünnepi öltözet</div><div class="sub">Elegáns, igényes megjelenés.</div></div>
+ <div class="box">
+  <div class="head">Részvétel visszajelzése</div>
+  <p class="p" style="margin-top:14px">Kérjük, részvételi szándékotokat legkésőbb 2026.&nbsp;október&nbsp;23-ig jelezzétek az alábbi elérhetőségek egyikén.</p>
+  <div class="div" style="justify-content:center;margin:20px 0"><i style="width:160px"></i><b></b><i style="width:160px"></i></div>
+  <dl class="rows"><dt>Weboldal:</dt><dd>wedding.aleksa.ai</dd><dt>E-mail:</dt><dd>szildebora@gmail.com</dd><dt>Telefon:</dt><dd>+36 20 346 7329</dd></dl>
+  <div class="div" style="justify-content:center;margin:20px 0"><i style="width:160px"></i><b></b><i style="width:160px"></i></div>
+  <p class="p">Kérjük, azt is jelezzétek, hogy párotokkal érkeztek-e, valamint a gyermekek vagy további vendégek számát korcsoportonként: 3&nbsp;év alatt, 3-18&nbsp;év között vagy 18&nbsp;év felett.</p>
+ </div>
+ <div class="code"><div class="head">Meghívókód</div><div class="slot" id="slot"></div></div>
+ <div class="div" style="margin:0 0 18px"><i style="width:230px"></i><b></b><i style="width:230px"></i></div>
+ <div class="serif close">Nagyon reméljük, hogy velünk ünnepeltek<br>ezen a különleges napon!</div>
+</div>
+<script>
+const r=document.getElementById('slot').getBoundingClientRect();const w=document.querySelector('.wrap').getBoundingClientRect();
+const last=document.querySelector('.close').getBoundingClientRect();const box=document.querySelector('.box').getBoundingClientRect();
+document.title=JSON.stringify({slotMid:Math.round(r.top+r.height/2),closeBottom:Math.round(last.bottom),boxTop:Math.round(box.top),boxBottom:Math.round(box.bottom),boxL:Math.round(box.left),boxR:Math.round(box.right)});
+</script>
+</body></html>
